@@ -11,7 +11,7 @@
         <script defer src="../userstylesb.js"></script>
         <link rel="stylesheet" href="../styles/base.css">
     </head>
-    <body>
+    <body  style="height: 100vh;">
         <div id="nav">&nbsp;
         <span class='left'>
             <?php include '../nav.php';

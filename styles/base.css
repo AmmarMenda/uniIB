@@ -1,33 +1,26 @@
 body {
-    background-color:#4C0027;
-    font-size: 10pt;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    font-size: 14pt;
     margin: 0px;
 }
 a {
-    margin:15px;
-    color :white;
     text-decoration: none;
 }
 
-a:hover {
-    color:yellow;
-    text-decoration: none;
-}
 gt::before {
     content: "> ";
 }
-.boardhead{
-    font-weight:bold;
-}
 #nav {
     height:25px;
-    top-padding:10px;
+    padding-top:10px;
     
-    background-color:#750550;
     padding: 10px;
     font-size: 13pt;
     display: block;
 }
+
 #head {
     display: block;
     text-align: -webkit-center;
@@ -36,11 +29,11 @@ gt::before {
     margin-bottom: 3em;
     padding: 5px;
 }
-#head .motd {
+#head .motdtop {
     font-size: 11px;
     margin-top: 16px;
     text-align: left;
-    display: block;
+    /* display: block; */
 }
 #head table {
     width: 100%;
@@ -86,39 +79,26 @@ hr {
     display: inline-block;
 }
 table {
-    background-color:#750550;
+    width:60%;
+    height:70%;
     text-align: left;
     position: relative;
-    padding: 10px;
-    width:70%;
-    height:50%;
-    border : 5px solid white;
 }
 tr {
-    background-color:#750550;
-    margin: 0px;
-    padding: 0px;
-}
-.head{
-    color:
-    background-color:#ADA991;
+    height: 45px;
 }
 td {
-    color:#ECDBBA;
-    background-color:#750550;
-    padding:0px;
     padding: 5px;
 }
-table,td,tr{
-    border-color:#570530;
-    border-radius:8px;
-    }
 td a {
     font-weight: bolder;
 }
 td a:hover {
     text-decoration: underline;
 }
+table,td,tr{
+    border-radius:9px;
+    }
 
 @media only screen and (max-device-width: 480px) {
     #nav {
@@ -150,6 +130,10 @@ table img {
 }
 .overchanlink {
     font-weight: bold;
-    margin-right: 10px;
+    margin-right: 10px;
 }
-
+.moddytd{
+    width: 500px;
+    height: 65px;
+    
+}

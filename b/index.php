@@ -34,7 +34,7 @@
         <div id="head">
 
 
-            <h1 style="color:white"><u><b>☆ Random ☆</b></u></h1>
+            <h1 style="color:white"><b>☆ RANDOM ☆</b></h1>
                 
 
             <form role="form" action="index.php" method="post" enctype="multipart/form-data">
@@ -80,7 +80,7 @@
 
                     <tr>
                     <td class="boardhead">
-                    Submit
+                    SUBMIT
                     </td>
                     <td>
                     <button class = "btn btn-lg btn-primary btn-block" type = "submit" 

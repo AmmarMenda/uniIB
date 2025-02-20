@@ -1,12 +1,15 @@
 body {
-    background-color: #1d1f21;
+    background-image:linear-gradient(to bottom,#1d1f21,#1d1f21,#1d1f21,#1d1f21,#1d1f21,#5f1729);
+    /* background-image: url(../static/dark_enhanced_Copy.png); */
     color: #c5c8c6;
+    height: auto;
     font-family: Arial, Helvetica, sans-serif;
 }
 highlight {
     color: #81c564;
 }
 a {
+    font-weight: bold;
     color: #81c564;
 }
 a:hover {
@@ -21,11 +24,29 @@ rt {
 pt {
     color: #b294bb;
 }
+a {
+    margin:15px;
+    color :#fb6f92;
+    text-decoration: none;
+}
+a:hover {
+    color:yellow;
+}
 #nav {
+    height:25px;
+    top-padding:10px;
+    background-color: #282a2e;
+    padding: 10px;
+    font-size: 13pt;
+    display: block;
+    box-shadow: 0px 4px 5px #16171a;
+
+}
+/* #nav {
     background-color: #282a2e;
     border: 1px solid black;
     box-shadow: 0px 4px 5px #16171a;
-}
+} */
 #head h1,h2,h3 {
     font-family: Tahoma,sans-serif;
     color: #81c564;
@@ -51,19 +72,19 @@ hr {
     border-top: 1px solid #282a2e;
 }
 table {
-    background-color: #f6f6f6;
+    /* background-color: #f6f6f6; */
     background-color: #282a2e;
     border: 1px solid black;
     box-shadow: 0px 4px 5px #16171a;
 }
 tr {
-    border: 1px solid black;
+    border: 5px solid #282a2e;
 }
 tr .top {
     background-color: #3a3d42;
 }
 td {
-    border: 1px solid black;
+    border: 1px solid #282a2e;
 }
 @media only screen and (max-device-width: 480px) {
     #nav {
@@ -97,4 +118,7 @@ button:hover {
 
 .submitbutton:hover {
     background-color: #3d4046;
+}
+.moddybtn{
+color:white;
 }

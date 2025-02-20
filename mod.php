@@ -11,7 +11,7 @@
         <script defer src="userstyles.js"></script>
         <link rel="stylesheet" href="styles/base.css">
     </head>
-    <body>
+    <body style="height: 100vh;">
     <div id="nav">&nbsp;
         <span class='left'>
             <?php include 'nav.php';
@@ -30,28 +30,29 @@
         <div id="head">
 
 
-            <h1>Manage</h1>
+            <h1 style="color:white">MANAGE</h1>
                 
 
             <form class = "form-signin" role = "form" 
             action = "<?php echo htmlspecialchars($_SERVER['PHP_SELF']); 
             ?>" method = "post" id="form">
 
-            <table style='width: auto;'>
+            <table style='width: auto;' >
+            
                     <tr>
-                    <td class="top">
-                    Login
+                    <td class="moddytd top"  style="text-align:center"><h3 style="color:white">
+                    LOGIN HERE</h3>
                     </td>
                     </tr>
-                    <tr>
+                    <tr >
                     <td>
-                    <input type = "text" class = "form-control" 
-            name = "username" placeholder = "username" 
-            required><br>
-                    <input type = "password" class = "form-control"
+                    <input type = "text" class = " moddytd form-control" 
+            name = "username" placeholder = "Username" 
+            required ><br>
+                    <input type = "Password" class = " moddytd form-control"
             name = "password" placeholder = "password" required><br>
-                    <button style="width: 100%;" class = "btn btn-lg btn-primary btn-block" type = "submit" 
-            name = "login">Login</button>
+                    <button style=" width: 100%;" class = "moddybtn btn btn-lg btn-primary btn-block" type = "submit" 
+            name = "login"><h3 style="color:white">LOGIN</h3></button>
                     </td>
                     </tr>
                     </table>

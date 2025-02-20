@@ -29,18 +29,19 @@
 
         <div id="head">
             <a href="index.php">
-            <img src="static/openchan.gif" style="width: 45%;margin: 10px;">
+            <img src="static/openchan.png" style="width: 45%;margin: 10px;">
 </a>
-            <h1> </h1> 
+            <h1> </h1> <div class="rad">
                     <table>
                     <tr>
                     <td class="head">
-                    <b>About Openchan</b>
+                    <b>ABOUT OPENCHAN</b>
                     </td>
                     </tr>
                     <tr>
                     <td>
-WE TALKIN BULLSHIT OVAA HEREE IRAC FOR LIFE                    </td>
+                        We talk over here IRAC for life  
+                    </td>
                     </tr>
                     </table>
 
@@ -77,7 +78,7 @@ WE TALKIN BULLSHIT OVAA HEREE IRAC FOR LIFE                    </td>
                     </tr>
 
                     </table>
-
+</div>
                     <table>
                     <tr>
                     <td class="head">
@@ -96,9 +97,9 @@ WE TALKIN BULLSHIT OVAA HEREE IRAC FOR LIFE                    </td>
 
         </div>
 
-        <div id="content">
-        </div>
-        <div id="footer"></div>
+        <!-- <div id="content">
+        </div> -->
+        <!-- <div id="footer"></div> -->
         <div id="pageparam"><?php
             echo $_GET['token'];
         ?></div>
