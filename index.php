@@ -77,6 +77,21 @@
                     </td>
                     </tr>
 
+                    <tr>
+                    <td>
+                    <a href="co/">Cordinator Form</a>
+                    </td>
+                    <td>
+                    Form for volunteering for Cordination of University events
+                    </td>
+                    <td>
+                    <?php echo file_get_contents('co/postcount.txt')?>
+                    </td>
+                    <td>
+                    <?php echo file_get_contents('co/lastupdated.txt')?>
+                    </td>
+                    </tr>
+
                     </table>
 </div>
                     <table>

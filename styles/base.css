@@ -29,7 +29,7 @@ gt::before {
     margin-bottom: 3em;
     padding: 5px;
 }
-#head .motdtop {
+#head .motop {
     font-size: 11px;
     margin-top: 16px;
     text-align: left;
@@ -79,7 +79,7 @@ hr {
     display: inline-block;
 }
 table {
-    width:60%;
+    width:30%;
     height:70%;
     text-align: left;
     position: relative;
