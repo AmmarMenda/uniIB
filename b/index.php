@@ -7,7 +7,7 @@
         <meta name="author" content="Anon">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="shortcut icon" href="../favicon.png">
-        <title>Openchan /b/</title>
+        <title>UniIB /b/</title>
         <script defer src="../userstylesb.js"></script>
         <link rel="stylesheet" href="../styles/base.css">
         <?php
