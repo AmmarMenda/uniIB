@@ -1,0 +1,133 @@
+/* Base Styles */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+#nav {
+    background-color: #e0e0e0;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    max-width: 45%;
+    height: auto;
+    margin: 10px;
+    display: block;
+}
+
+/* Board Info Styles */
+.board-info {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.about,
+.stats {
+    background-color: #fff;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.board-list table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.board-list th,
+.board-list td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.board-list th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+}
+
+.board-list tr:hover {
+    background-color: #f9f9f9;
+}
+
+/* Footer Styles */
+#footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #e0e0e0;
+    margin-top: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .logo {
+        max-width: 80%;
+    }
+
+    .board-list table {
+        display: block;
+        overflow-x: auto;
+    }
+
+    #nav {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .left,
+    .right {
+        margin: 5px 0;
+    }
+}
+
+/* Theme Styles */
+body.dark {
+    background-color: #222;
+    color: #eee;
+}
+
+body.dark .about,
+body.dark .stats,
+body.dark .board-list table {
+    background-color: #333;
+    color: #eee;
+}
+
+body.dark .board-list th {
+    background-color: #444;
+}
+
+/* Add more theme styles as needed */
+/* Logo Styles */
+.logo-container {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.logo {
+    width: 30%; /* Adjust this percentage to make it smaller or larger */
+    max-width: 300px; /* Maximum size */
+    height: auto;
+    display: block;
+}
+
+/* For mobile responsiveness */
+@media (max-width: 768px) {
+    .logo {
+        width: 50%; /* Larger percentage on small screens */
+    }
+}

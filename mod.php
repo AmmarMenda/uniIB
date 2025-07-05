@@ -1,131 +1,249 @@
+<?php
+session_start();
+
+// Configuration
+$config = [
+    "admin_username" => "redditmod",
+    "admin_password" => "admin", // In production, use password_hash()
+    "posts_per_page" => 20,
+    "data_dir" => "b/posts/", // Directory where posts are stored
+    "backup_dir" => "b/backups/",
+    "base_url" => "", // Your site's base URL
+];
+
+// Security headers
+header("X-Frame-Options: DENY");
+header("X-Content-Type-Options: nosniff");
+
+// Handle logout
+if (isset($_GET["logout"])) {
+    session_unset();
+    session_destroy();
+    header("Location: " . strtok($_SERVER["REQUEST_URI"], "?"));
+    exit();
+}
+
+// Handle login
+if (
+    isset($_POST["login"]) &&
+    !empty($_POST["username"]) &&
+    !empty($_POST["password"])
+) {
+    if (
+        $_POST["username"] === $config["admin_username"] &&
+        $_POST["password"] === $config["admin_password"]
+    ) {
+        $_SESSION["authenticated"] = true;
+        $_SESSION["username"] = $config["admin_username"];
+        $_SESSION["last_activity"] = time();
+        $_SESSION["ip"] = $_SERVER["REMOTE_ADDR"];
+        header("Location: " . $_SERVER["PHP_SELF"]);
+        exit();
+    } else {
+        $error_msg = "Invalid username or password";
+    }
+}
+
+// Handle post deletion
+if (isset($_SESSION["authenticated"]) && isset($_POST["delete_post"])) {
+    $post_id = basename($_POST["delete_post"]);
+    $post_file = $config["data_dir"] . $post_id . ".json";
+
+    if (file_exists($post_file)) {
+        // Create backup before deletion
+        if (!is_dir($config["backup_dir"])) {
+            mkdir($config["backup_dir"], 0755, true);
+        }
+
+        $post_data = json_decode(file_get_contents($post_file), true);
+
+        // Backup the image if exists
+        if (
+            !empty($post_data["file"]) &&
+            file_exists($config["data_dir"] . $post_data["file"])
+        ) {
+            rename(
+                $config["data_dir"] . $post_data["file"],
+                $config["backup_dir"] . "deleted_" . $post_data["file"]
+            );
+        }
+
+        rename(
+            $post_file,
+            $config["backup_dir"] .
+                "deleted_" .
+                $post_id .
+                "_" .
+                time() .
+                ".json"
+        );
+        $success_msg = "Post deleted successfully";
+    }
+}
+
+// Get all posts
+$posts = [];
+if (isset($_SESSION["authenticated"]) && is_dir($config["data_dir"])) {
+    $post_files = scandir($config["data_dir"], SCANDIR_SORT_DESCENDING);
+    foreach ($post_files as $file) {
+        if ($file === "." || $file === "..") {
+            continue;
+        }
+        if (pathinfo($file, PATHINFO_EXTENSION) !== "json") {
+            continue;
+        }
+
+        $post_content = file_get_contents($config["data_dir"] . $file);
+        $post_data = json_decode($post_content, true);
+
+        // Skip if invalid data
+        if (!is_array($post_data)) {
+            continue;
+        }
+
+        $posts[] = $post_data;
+    }
+}
+?>
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <meta name="keywords" content="Photos, Viewer">
-        <meta name="description" content="Photo Gallery">
-        <meta name="author" content="Anon">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="shortcut icon" href="favicon.png">
-        <title>Openchan /b/</title>
-        <script defer src="userstyles.js"></script>
-        <link rel="stylesheet" href="styles/base.css">
-    </head>
-    <body style="height: 100vh;">
-    <div id="nav">&nbsp;
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Openchan /b/ - Moderator Panel</title>
+    <link rel="shortcut icon" href="favicon.png">
+    <link rel="stylesheet" href="../styles/moderator.css">
+    <style>
+        .post-image {
+            max-width: 200px;
+            max-height: 200px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+        }
+        .post-image-container {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <header id="nav">
         <span class='left'>
-            <?php include 'nav.php';
-            ?>
+            <a href="../b/">Back to /b/</a>
         </span>
         <span class="right">
-        <select name="cars" id="userstyleselecter" style="margin-top: -5px;" onchange="userstyle();">
-            <option value="Light">Light</option>
-            <option value="Dark">Dark</option>
-            <option value="Yotsuba">Yotsuba</option>
-            <option value="Yotsuba B">Yotsuba B</option>
-        </select>
+            <?php if (isset($_SESSION["authenticated"])): ?>
+                <a href="?logout" class="logout-btn">Logout</a>
+            <?php endif; ?>
         </span>
-        </div>
+    </header>
 
-        <div id="head">
+    <main id="content">
+        <?php if (isset($error_msg)): ?>
+            <div class="alert error"><?= htmlspecialchars($error_msg) ?></div>
+        <?php endif; ?>
 
+        <?php if (isset($success_msg)): ?>
+            <div class="alert success"><?= htmlspecialchars(
+                $success_msg
+            ) ?></div>
+        <?php endif; ?>
 
-            <h1 style="color:white">MANAGE</h1>
-                
+        <?php if (!isset($_SESSION["authenticated"])): ?>
+            <div class="login-container">
+                <h1>Moderator Login</h1>
+                <form method="post" class="login-form">
+                    <input type="text" name="username" placeholder="Username" required>
+                    <input type="password" name="password" placeholder="Password" required>
+                    <button type="submit" name="login">Login</button>
+                </form>
+            </div>
+        <?php else: ?>
+            <div class="mod-panel">
+                <h1>/b/ Moderator Panel</h1>
+                <p>Welcome, <?= htmlspecialchars($_SESSION["username"]) ?></p>
+                <p>Total Posts: <?= count($posts) ?></p>
 
-            <form class = "form-signin" role = "form" 
-            action = "<?php echo htmlspecialchars($_SERVER['PHP_SELF']); 
-            ?>" method = "post" id="form">
+                <div class="post-list">
+                    <h2>Recent Posts</h2>
+                    <?php if (empty($posts)): ?>
+                        <p>No posts found.</p>
+                    <?php else: ?>
+                        <table class="posts-table">
+                            <thead>
+                                <tr>
+                                    <th>Post ID</th>
+                                    <th>Content</th>
+                                    <th>Image</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($posts as $post): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars(
+                                        substr($post["id"], 0, 8)
+                                    ) ?>...</td>
+                                    <td class="post-content">
+                                        <strong><?= htmlspecialchars(
+                                            $post["name"]
+                                        ) ?></strong><br>
+                                        <?php if (!empty($post["subject"])): ?>
+                                            <em><?= htmlspecialchars(
+                                                $post["subject"]
+                                            ) ?></em><br>
+                                        <?php endif; ?>
+                                        <?= nl2br(
+                                            htmlspecialchars(
+                                                substr($post["message"], 0, 200)
+                                            )
+                                        ) ?>
+                                        <?php if (
+                                            strlen($post["message"]) > 200
+                                        ): ?>...<?php endif; ?>
+                                    </td>
+                                    <td class="post-image-cell">
+                                        <?php if (
+                                            !empty($post["file"]) &&
+                                            file_exists(
+                                                $config["data_dir"] .
+                                                    $post["file"]
+                                            )
+                                        ): ?>
+                                            <div class="post-image-container">
+                                                <img src="<?= htmlspecialchars(
+                                                    $config["data_dir"] .
+                                                        $post["file"]
+                                                ) ?>"
+                                                     class="post-image"
+                                                     alt="Post image">
+                                            </div>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td><?= date(
+                                        "Y-m-d H:i:s",
+                                        $post["timestamp"]
+                                    ) ?></td>
+                                    <td>
+                                        <form method="post" onsubmit="return confirm('Delete this post?');">
+                                            <input type="hidden" name="delete_post" value="<?= htmlspecialchars(
+                                                $post["id"]
+                                            ) ?>">
+                                            <button type="submit" class="delete-btn">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
+                </div>
+            </div>
+        <?php endif; ?>
+    </main>
 
-            <table style='width: auto;' >
-            
-                    <tr>
-                    <td class="moddytd top"  style="text-align:center"><h3 style="color:white">
-                    LOGIN HERE</h3>
-                    </td>
-                    </tr>
-                    <tr >
-                    <td>
-                    <input type = "text" class = " moddytd form-control" 
-            name = "username" placeholder = "Username" 
-            required ><br>
-                    <input type = "Password" class = " moddytd form-control"
-            name = "password" placeholder = "password" required><br>
-                    <button style=" width: 100%;" class = "moddybtn btn btn-lg btn-primary btn-block" type = "submit" 
-            name = "login"><h3 style="color:white">LOGIN</h3></button>
-                    </td>
-                    </tr>
-                    </table>
-            </form>
-        </div>
-
-
-
-<?php
-                       // echo file_get_contents($db);
-                    ?>
-
-        </div>
-
-        <div id="content">
-        <div class="center">
-        <?php
-            $msg = '';
-            
-            if (isset($_POST['login']) && !empty($_POST['username']) 
-               && !empty($_POST['password'])) {
-				
-               if ($_POST['username'] == 'redditmod' && 
-                  $_POST['password'] == 'admin') {
-                  $_SESSION['valid'] = true;
-                  $_SESSION['timeout'] = time();
-                  $_SESSION['username'] = 'redditmod';
-                  
-                  echo "<script>document.getElementById('head').innerHTML = '<!-- removed bc your logged in -->';
-                  </script>";
-
-                  // mod for b
-                  echo "<table><tr><td class='top'>";
-                  echo "<b>Moderate /b/</b>";
-                  echo "</td></tr><tr><td>";
-                  echo '<form role="form" action="mod.php" method="post" enctype="multipart/form-data">';
-                  echo "<textarea name='ideb' style='width: 500px;height: 300px;'>" . file_get_contents('b/database.html') . "</textarea>";
-                  echo '<button class="btn btn-lg btn-primary btn-block" type="submit" name="submitb">Update Page</button>';
-                  echo '</form>';
-                  echo "</td></tr></table>";
-
-                  // mod for overchan
-                  echo "<table><tr><td class='top'>";
-                  echo "<b>Moderate /overchan/</b>";
-                  echo "</td></tr><tr><td>";
-                  echo '<form role="form" action="mod.php" method="post" enctype="multipart/form-data">';
-                  echo "<textarea name='ideo' style='width: 500px;height: 300px;'>" . file_get_contents('overchan/database.html') . "</textarea>";
-                  echo '<button class="btn btn-lg btn-primary btn-block" type="submit" name="submito">Update Page</button>';
-                  echo '</form>';
-                  echo "</td></tr></table>";
-
-
-               }else {
-                  echo '<b><rt>Wrong username or password</rt></b><br><br>';
-               }
-            }
-
-            if(isset($_POST['submitb'])) {
-                file_put_contents('b/database.html',$_POST['ideb']);
-              }
-
-              if(isset($_POST['submito'])) {
-                file_put_contents('overchan/database.html',$_POST['ideo']);
-              }
-         ?>
-        </div>
-        </div>
-        <div id="footer"></div>
-        <div id="pageparam"><?php
-            if (isset($_get['token'])) {
-            echo $_GET['token'];
-            }
-        ?></div>
-        
-    </body>
+    <footer id="footer">
+        <p>Openchan Moderator Panel &copy; <?= date("Y") ?></p>
+    </footer>
+</body>
 </html>

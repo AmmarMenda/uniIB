@@ -1,190 +1,329 @@
+<?php
+// Configuration
+$config = [
+    "board_title" => "/b/ - Random",
+    "description" => "Off-topic discussion",
+    "posts_per_page" => 10,
+    "data_dir" => "posts/",
+    "allowed_file_types" => ["image/jpeg", "image/png", "image/gif"],
+    "max_file_size" => 2 * 1024 * 1024, // 2MB
+    "max_threads" => 100,
+    "max_replies" => 200, // Max replies per thread
+];
+
+// Create directories if they don't exist
+if (!file_exists($config["data_dir"])) {
+    mkdir($config["data_dir"], 0755, true);
+}
+
+// Handle new post submission
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $error = "";
+
+    // Validate inputs
+    $name = isset($_POST["name"])
+        ? substr(trim($_POST["name"]), 0, 50)
+        : "Anonymous";
+    $subject = isset($_POST["subject"])
+        ? substr(trim($_POST["subject"]), 0, 100)
+        : "";
+    $message = isset($_POST["message"]) ? trim($_POST["message"]) : "";
+    $thread_id = isset($_POST["thread_id"]) ? (int) $_POST["thread_id"] : null;
+
+    if (empty($message)) {
+        $error = "Message cannot be empty";
+    }
+
+    // Handle file upload (only allowed in OP posts)
+    $file_name = "";
+    $file_path = "";
+    if (
+        empty($thread_id) &&
+        isset($_FILES["file"]) &&
+        $_FILES["file"]["error"] === UPLOAD_ERR_OK
+    ) {
+        $file_info = $_FILES["file"];
+
+        if ($file_info["size"] > $config["max_file_size"]) {
+            $error = "File too large (max 2MB)";
+        } elseif (
+            !in_array($file_info["type"], $config["allowed_file_types"])
+        ) {
+            $error = "Invalid file type";
+        } else {
+            $file_ext = pathinfo($file_info["name"], PATHINFO_EXTENSION);
+            $file_name = uniqid() . "." . $file_ext;
+            $file_path = $config["data_dir"] . $file_name;
+
+            if (!move_uploaded_file($file_info["tmp_name"], $file_path)) {
+                $error = "Failed to upload file";
+            }
+        }
+    }
+
+    // Save post if no errors
+    if (empty($error)) {
+        $post_id = time();
+        $post_data = [
+            "id" => $post_id,
+            "name" => $name,
+            "subject" => $subject,
+            "message" => $message,
+            "file" => $file_name,
+            "timestamp" => $post_id,
+            "ip" => $_SERVER["REMOTE_ADDR"],
+            "is_thread" => empty($thread_id),
+            "thread_id" => empty($thread_id) ? $post_id : $thread_id,
+            "replies" => [],
+        ];
+
+        // If this is a reply, add it to the thread
+        if (!empty($thread_id)) {
+            $thread_file = $config["data_dir"] . $thread_id . ".json";
+            if (file_exists($thread_file)) {
+                $thread_data = json_decode(
+                    file_get_contents($thread_file),
+                    true
+                );
+                if (count($thread_data["replies"]) < $config["max_replies"]) {
+                    $thread_data["replies"][] = $post_data;
+                    file_put_contents($thread_file, json_encode($thread_data));
+                } else {
+                    $error =
+                        "Thread is full (max " .
+                        $config["max_replies"] .
+                        " replies)";
+                }
+            } else {
+                $error = "Thread not found";
+            }
+        }
+
+        // If this is a new thread or reply was added successfully
+        if (empty($thread_id) || empty($error)) {
+            file_put_contents(
+                $config["data_dir"] . $post_id . ".json",
+                json_encode($post_data)
+            );
+        }
+
+        if (empty($error)) {
+            header("Location: " . $_SERVER["REQUEST_URI"]);
+            exit();
+        }
+    }
+}
+
+// Get all threads (OP posts)
+$threads = [];
+if (is_dir($config["data_dir"])) {
+    $post_files = scandir($config["data_dir"]);
+    rsort($post_files); // Newest first
+
+    foreach ($post_files as $file) {
+        if ($file === "." || $file === "..") {
+            continue;
+        }
+        if (pathinfo($file, PATHINFO_EXTENSION) !== "json") {
+            continue;
+        }
+
+        $post_content = file_get_contents($config["data_dir"] . $file);
+        $post_data = json_decode($post_content, true);
+
+        if ($post_data["is_thread"]) {
+            $threads[] = $post_data;
+            if (count($threads) >= $config["max_threads"]) {
+                break;
+            }
+        }
+    }
+}
+
+// Update post count
+$total_posts =
+    count($threads) +
+    array_sum(
+        array_map(function ($t) {
+            return count($t["replies"]);
+        }, $threads)
+    );
+file_put_contents("postcount.txt", $total_posts);
+file_put_contents("lastupdated.txt", date("Y-m-d H:i:s"));
+?>
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8">
-        <meta name="keywords" content="Photos, Viewer">
-        <meta name="description" content="Photo Gallery">
-        <meta name="author" content="Anon">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="shortcut icon" href="../favicon.png">
-        <title>UniIB /b/</title>
-        <script defer src="../userstylesb.js"></script>
-        <link rel="stylesheet" href="../styles/base.css">
-        <?php
-            $db = "database.html";
-            $bn = "b";
-        ?>
-    </head>
-    <body>
-    <div id="nav">&nbsp;
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= htmlspecialchars($config["board_title"]) ?> - Openchan</title>
+    <link rel="stylesheet" href="../styles/board.css">
+    <link rel="shortcut icon" href="../favicon.png">
+    <script>
+    function toggleReplyForm(threadId) {
+        const form = document.getElementById('reply-form-' + threadId);
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+    </script>
+</head>
+<body>
+    <header id="nav">
         <span class='left'>
-            <?php include '../nav.php';
-            ?>
+            <a href="../">Home</a> /
+            <a href="./"><?= htmlspecialchars($config["board_title"]) ?></a>
         </span>
         <span class="right">
-        <select name="cars" id="userstyleselecter" style="margin-top: -5px;" onchange="userstyle();">
-            <option value="Light">Light</option>
-            <option value="Dark">Dark</option>
-            <option value="Yotsuba">Yotsuba</option>
-            <option value="Yotsuba B">Yotsuba B</option>
-        </select>
+            <a href="../mod.php">Mod Panel</a>
         </span>
-        </div>
+    </header>
 
-        <div id="head">
+    <div id="board-header">
+        <h1><?= htmlspecialchars($config["board_title"]) ?></h1>
+        <p><?= htmlspecialchars($config["description"]) ?></p>
+        <p>Total Posts: <?= $total_posts ?> (<?= count($threads) ?> threads)</p>
+    </div>
 
+    <div id="post-form">
+        <form action="" method="post" enctype="multipart/form-data">
+            <table>
+                <tr>
+                    <td>Name:</td>
+                    <td><input type="text" name="name" maxlength="50" placeholder="Anonymous"></td>
+                </tr>
+                <tr>
+                    <td>Subject:</td>
+                    <td><input type="text" name="subject" maxlength="100"></td>
+                </tr>
+                <tr>
+                    <td>Message:</td>
+                    <td><textarea name="message" required></textarea></td>
+                </tr>
+                <tr>
+                    <td>File:</td>
+                    <td><input type="file" name="file"></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td><button type="submit">Create Thread</button></td>
+                </tr>
+            </table>
+            <?php if (!empty($error) && empty($_POST["thread_id"])): ?>
+                <p class="error"><?= htmlspecialchars($error) ?></p>
+            <?php endif; ?>
+        </form>
+    </div>
 
-            <h1 style="color:white"><b>☆ RANDOM ☆</b></h1>
-                
+    <div id="threads">
+        <?php foreach ($threads as $thread): ?>
+        <div class="thread">
+            <div class="op-post">
+                <div class="post-header">
+                    <span class="post-subject"><?= htmlspecialchars(
+                        $thread["subject"]
+                    ) ?></span>
+                    <span class="post-name"><?= htmlspecialchars(
+                        $thread["name"]
+                    ) ?></span>
+                    <span class="post-id">No. <?= $thread["id"] ?></span>
+                    <span class="post-date"><?= date(
+                        "Y/m/d H:i:s",
+                        $thread["timestamp"]
+                    ) ?></span>
+                </div>
+                <div class="post-content">
+                    <?php if (!empty($thread["file"])): ?>
+                    <div class="post-file">
+                        <a href="<?= htmlspecialchars(
+                            $config["data_dir"] . $thread["file"]
+                        ) ?>" target="_blank">
+                            <img src="<?= htmlspecialchars(
+                                $config["data_dir"] . $thread["file"]
+                            ) ?>"
+                                 alt="Attachment" class="thumbnail">
+                        </a>
+                    </div>
+                    <?php endif; ?>
+                    <div class="post-message">
+                        <?= nl2br(htmlspecialchars($thread["message"])) ?>
+                    </div>
+                </div>
+                <div class="post-actions">
+                    <button onclick="toggleReplyForm(<?= $thread[
+                        "id"
+                    ] ?>)">Reply</button>
+                    <span class="reply-count">Replies: <?= count(
+                        $thread["replies"]
+                    ) ?></span>
+                </div>
+            </div>
 
-            <form role="form" action="index.php" method="post" enctype="multipart/form-data">
+            <!-- Reply form (hidden by default) -->
+            <div id="reply-form-<?= $thread[
+                "id"
+            ] ?>" class="reply-form" style="display: none;">
+                <form action="" method="post">
+                    <input type="hidden" name="thread_id" value="<?= $thread[
+                        "id"
+                    ] ?>">
                     <table>
-                    <tr>
-                    <td class="top">
-                    Label
-                    </td>
-                    <td class="top">
-                    Input
-                    </td>
-                    </tr>
-                    <tr>
-                    <td class="boardhead">
-                    Name*
-                    </td>
-                    <td>
-                    <input type = "text" class = "form-control" 
-                    name="sendername" placeholder = "Name"
-                    value="Anonymous" readonly required>
-                    </td>
-                    </tr>
-
-                    <tr>
-                    <td class="boardhead">
-                    Post Content*
-                    </td>
-                    <td>
-                    <textarea type='text' class = "form-control" 
-                    name = "content" placeholder = "Content" 
-                    required></textarea>
-                    </td>
-                    </tr>
-
-                    <tr>
-                    <td class="boardhead">
-                    Image Upload
-                    </td>
-                    <td>
-                    <input type="file" name="fileToUpload" id="fileToUpload">
-                    </td>
-                    </tr>
-
-                    <tr>
-                    <td class="boardhead">
-                    SUBMIT
-                    </td>
-                    <td>
-                    <button class = "btn btn-lg btn-primary btn-block" type = "submit" 
-                    name = "submit">Submit</button>
-                    <?php 
-                    if (isset($_get['token']) && $_GET['token'] === "manage420") {
-                        echo '<button class = "btn btn-lg btn-primary btn-block" type = "submit" 
-                        name = "submitasmod"><rt>Mod Submit</rt></button>';
-                    }
-                    ?>
-                    </td>
-                    </tr>
+                        <tr>
+                            <td>Name:</td>
+                            <td><input type="text" name="name" maxlength="50" placeholder="Anonymous"></td>
+                        </tr>
+                        <tr>
+                            <td>Message:</td>
+                            <td><textarea name="message" required></textarea></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><button type="submit">Post Reply</button></td>
+                        </tr>
                     </table>
+                    <?php if (
+                        !empty($error) &&
+                        isset($_POST["thread_id"]) &&
+                        $_POST["thread_id"] == $thread["id"]
+                    ): ?>
+                        <p class="error"><?= htmlspecialchars($error) ?></p>
+                    <?php endif; ?>
                 </form>
+            </div>
 
-
-<?php
-// Check if image file is a actual image or fake image
-$target_file = null;
-$uploadOk = 0;
-if(isset($_POST["submit"])) {
-    file_put_contents('postcount.txt',file_get_contents('postcount.txt') + 1);
-    file_put_contents('../overchan/postcount.txt',file_get_contents('../overchan/postcount.txt') + 1);
-
-    date_default_timezone_set("America/Chicago");
-    file_put_contents('lastupdated.txt',date("m-d-y"));
-
-
-    if (empty($_FILES['fileToUpload']['name'])) {
-        $uploadOk = 0;
-    } else {
-    $target_dir = "data/";
-    $target_file = $target_dir . basename($_FILES["fileToUpload"]["name"]);
-    $uploadOk = 1;
-    $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
-
-    
-  $check = getimagesize($_FILES["fileToUpload"]["tmp_name"]);
-  if($check !== false) {
-    echo "File is an image - " . $check["mime"] . ".";
-    $uploadOk = 1;
-  } else {
-    echo "File is not an image.";
-    $uploadOk = 0;
-  }
-
-
-
-// Check file size
-//if ($_FILES["fileToUpload"]["size"] > 500000) {
-//  echo "Sorry, your file is too large.";
-// $uploadOk = 0;
-//}
-
-// Allow certain file formats
-if($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg"
-&& $imageFileType != "gif" ) {
-  echo "Sorry, only JPG, JPEG, PNG & GIF files are allowed.";
-  $uploadOk = 0;
-}
-    }
-// Check if $uploadOk is set to 0 by an error
-if ($uploadOk == 0) {
-    file_put_contents($db,'<table id="' . file_get_contents('postcount.txt') . '"><tr><td class="top"><span class="left"><b>Anonymous <pt>#'. file_get_contents('postcount.txt') . '</pt></span><span class="right"> ' . date("m-d-y") . ' ' . date("h:i a") . ' </span></b></td></tr><tr><td>' . $_POST['content'] . '</td></tr></table>' . file_get_contents($db));
-    
-    // Overchan database
-    file_put_contents('../overchan/database.html','<table><tr><td class="top"><span class="left"><a class="highlight overchanlink" href="../' . $bn . '">/' . $bn . '/</a> <b>Anonymous  <pt>#'. file_get_contents('postcount.txt') . '</pt></span><span class="right"> ' . date("m-d-y") . ' ' . date("h:i a") . ' </span></b></td></tr><tr><td>' . $_POST['content'] . '</td></tr></table>' . file_get_contents('../overchan/database.html'));
-    
-    echo "<script>
-    window.location.href = '" , htmlspecialchars($_SERVER['PHP_SELF']) , "'
-    </script>";
-    echo "<br><br>It seems like you have javascript disabled, which prevented a redirect.<br><br>Please <a href='board.php'>click here</a> to visit the board.";// if everything is ok, try to upload file
-} else {
-  if (!move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], $target_file)) {
-    echo "Sorry, there was an error uploading your file.";
-  } else {
-    echo "The file ". htmlspecialchars( basename( $_FILES["fileToUpload"]["name"])). " has been uploaded.";
-    file_put_contents($db,'<table id="' . file_get_contents('postcount.txt') . '"><tr><td class="top"><span class="left"><b>Anonymous  <pt>#'. file_get_contents('postcount.txt') . '</pt></span><span class="right"> ' . date("m-d-y") . ' ' . date("h:i a") . ' </span></b></td></tr><tr><td><img src="data/'  . basename($_FILES["fileToUpload"]["name"]) . '"><br><br>' . $_POST['content'] . '</td></tr></table>' . file_get_contents($db));
-    
-    // Overchan databse
-    file_put_contents('../overchan/database.html','<table><tr><td class="top"><span class="left"><a class="highlight overchanlink" href="../' . $bn . '">/' . $bn . '/</a> <b>Anonymous  <pt>#'. file_get_contents('postcount.txt') . '</pt> </span><span class="right"> ' . date("m-d-y") . ' ' . date("h:i a") . ' </span></b></td></tr><tr><td><img src="../' . $bn . '/data' . '/' . basename($_FILES["fileToUpload"]["name"]) . '"><br><br>' . $_POST['content'] . '</td></tr></table>' . file_get_contents('../overchan/database.html'));
-
-    echo "<script>
-    window.location.href = '" , htmlspecialchars($_SERVER['PHP_SELF']) , "'
-    </script>";
-    echo "<br><br>It seems like you have javascript disabled, which prevented a redirect.<br><br>Please <a href='board.php'>click here</a> to visit the board.";  }
-}  
-    }
-?>
-
-<?php
-                        echo file_get_contents($db);
-                    ?>
-
+            <!-- Replies -->
+            <div class="replies">
+                <?php foreach (
+                    array_slice($thread["replies"], -5)
+                    as $reply
+                ): ?>
+                <div class="reply">
+                    <div class="post-header">
+                        <span class="post-name"><?= htmlspecialchars(
+                            $reply["name"]
+                        ) ?></span>
+                        <span class="post-id">No. <?= $reply["id"] ?></span>
+                        <span class="post-date"><?= date(
+                            "Y/m/d H:i:s",
+                            $reply["timestamp"]
+                        ) ?></span>
+                    </div>
+                    <div class="post-content">
+                        <div class="post-message">
+                            <?= nl2br(htmlspecialchars($reply["message"])) ?>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+                <?php if (count($thread["replies"]) > 5): ?>
+                    <div class="more-replies"><?= count($thread["replies"]) -
+                        5 ?> more replies...</div>
+                <?php endif; ?>
+            </div>
         </div>
+        <?php endforeach; ?>
+    </div>
 
-        <div id="content">
-        </div>
-        <div id="footer"></div>
-        <div id="pageparam"><?php
-            if (isset($_get['token'])) {
-            echo $_GET['token'];
-            }
-        ?></div>
-        
-    </body>
+    <footer id="footer">
+        <p>Openchan /b/ - Page generated at <?= date("Y-m-d H:i:s") ?></p>
+    </footer>
+</body>
 </html>

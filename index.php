@@ -1,123 +1,122 @@
+<?php
+// Configuration
+$boards = [
+    "b" => [
+        "name" => "/b/ Random",
+        "description" => "Off-topic discussion",
+    ],
+    "co" => [
+        "name" => "Coordinator Form",
+        "description" =>
+            "Form for volunteering for Coordination of University events",
+    ],
+];
+
+// Calculate total posts
+$totalPosts = 0;
+foreach ($boards as $dir => $board) {
+    if (file_exists("$dir/postcount.txt")) {
+        $totalPosts += (int) file_get_contents("$dir/postcount.txt");
+    }
+}
+file_put_contents("overchan/postcount.txt", $totalPosts);
+?>
 <!DOCTYPE html>
-<html>
+<html lang="en">
     <head>
         <meta charset="UTF-8">
-        <meta name="keywords" content="Photos, Viewer">
-        <meta name="description" content="Photo Gallery">
-        <meta name="author" content="Anon">
+        <meta name="keywords" content="Imageboard, Photos, Viewer">
+        <meta name="description" content="Openchan Image Board">
+        <meta name="author" content="Openchan">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="shortcut icon" href="favicon.ico">
         <title>Openchan</title>
-        <script defer src="userstyles.js"></script>
-        <link rel="stylesheet" href="styles/base.css">
+        <script defer src="js/userstyles.js"></script>
+        <link rel="stylesheet" href="styles/styles.css">
     </head>
     <body>
-        <div id="nav">&nbsp;
-        <span class='left'>
-            <?php include 'nav.php';
-            ?>
-        </span>
-        <span class="right">
-        <select name="cars" id="userstyleselecter" style="margin-top: -5px;" onchange="userstyle();">
-            <option value="Light">Light</option>
-            <option value="Dark">Dark</option>
-            <option value="Yotsuba">Yotsuba</option>
-            <option value="Yotsuba B">Yotsuba B</option>
-        </select>
-        </span>
-        </div>
+        <header id="nav">
+            <span class='left'>
+                <?php include "includes/nav.php"; ?>
+            </span>
+            <span class="right">
+                <select id="userstyleselecter" onchange="userstyle();">
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                    <option value="yotsuba">Yotsuba</option>
+                    <option value="yotsuba-b">Yotsuba B</option>
+                </select>
+            </span>
+        </header>
 
-        <div id="head">
-            <a href="index.php">
-            <img src="static/openchan.png" style="width: 45%;margin: 10px;">
-</a>
-            <h1> </h1> <div class="rad">
-                    <table>
-                    <tr>
-                    <td class="head">
-                    <b>ABOUT OPENCHAN</b>
-                    </td>
-                    </tr>
-                    <tr>
-                    <td>
-                        We talk over here IRAC for life  
-                    </td>
-                    </tr>
-                    </table>
+        <main id="content">
+            <div id="head">
+                <div class="logo-container">
+                           <a href="index.php">
+                               <img src="static/openchan3.gif" alt="Openchan Logo" class="logo">
+                           </a>
+                </a>
+                </div>
 
-                    <table>
-                    <tr>
-                    <td class="head">
-                    <b>Title</b>
-                    </td>
-                    <td class="head">
-                    <b>Description</b>
-                    </td>
-                    <td class="head">
-                    <b>Posts</b>
-                    </td>
-                    <td class="head">
-                    <b>Updated</b>
-                    </td>
-                    </tr>
+                <div class="board-info">
+                    <section class="about">
+                        <h2>ABOUT OPENCHAN</h2>
+                        <p>This is website is for open discussions</p>
+                    </section>
 
+                    <section class="board-list">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Description</th>
+                                    <th>Posts</th>
+                                    <th>Updated</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($boards as $dir => $board): ?>
+                                <tr>
+                                    <td><a href="<?= htmlspecialchars(
+                                        $dir
+                                    ) ?>/"><?= htmlspecialchars(
+    $board["name"]
+) ?></a></td>
+                                    <td><?= htmlspecialchars(
+                                        $board["description"]
+                                    ) ?></td>
+                                    <td><?= file_exists("$dir/postcount.txt")
+                                        ? htmlspecialchars(
+                                            file_get_contents(
+                                                "$dir/postcount.txt"
+                                            )
+                                        )
+                                        : "0" ?></td>
+                                    <td><?= file_exists("$dir/lastupdated.txt")
+                                        ? htmlspecialchars(
+                                            file_get_contents(
+                                                "$dir/lastupdated.txt"
+                                            )
+                                        )
+                                        : "Never" ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </section>
 
-                    <tr>
-                    <td>
-                    <a href="b/">/b/ Random</a>
-                    </td>
-                    <td>
-                    Off-topic disscussion.
-                    </td>
-                    <td>
-                    <?php echo file_get_contents('b/postcount.txt') ?>
-                    </td>
-                    <td>
-                    <?php echo file_get_contents('b/lastupdated.txt') ?>
-                    </td>
-                    </tr>
+                    <section class="stats">
+                        <h2>Stats</h2>
+                        <p><strong>Total Posts:</strong> <?= htmlspecialchars(
+                            $totalPosts
+                        ) ?></p>
+                    </section>
+                </div>
+            </div>
+        </main>
 
-                    <tr>
-                    <td>
-                    <a href="co/">Cordinator Form</a>
-                    </td>
-                    <td>
-                    Form for volunteering for Cordination of University events
-                    </td>
-                    <td>
-                    <?php echo file_get_contents('co/postcount.txt')?>
-                    </td>
-                    <td>
-                    <?php echo file_get_contents('co/lastupdated.txt')?>
-                    </td>
-                    </tr>
-
-                    </table>
-</div>
-                    <table>
-                    <tr>
-                    <td class="head">
-                    <b>Stats</b>
-                    </td>
-                    </tr>
-                    <tr>
-                    <td>
-                    <b>Total Posts: </b> <?php echo file_get_contents('overchan/postcount.txt') ?>
-                    </td>
-                    </tr>
-                    </table>
-
-
-
-
-        </div>
-
-        <!-- <div id="content">
-        </div> -->
-        <!-- <div id="footer"></div> -->
-        <div id="pageparam"><?php
-            echo $_GET['token'];
-        ?></div>
-        
+        <footer id="footer">
+            <p>Openchan &copy; <?= date("Y") ?></p>
+        </footer>
     </body>
 </html>
