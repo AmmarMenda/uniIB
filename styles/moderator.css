@@ -236,3 +236,53 @@ body.dark .posts-table tr:hover {
     color: #cc1105;
     font-style: italic;
 }
+/* Reported Post Styles */
+.reported-post {
+    background-color: #fff3f3;
+    border-left: 3px solid #ff6b6b;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        background-color: #fff3f3;
+    }
+    50% {
+        background-color: #ffecec;
+    }
+    100% {
+        background-color: #fff3f3;
+    }
+}
+
+.reported-label {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: #ff6b6b;
+    color: white;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 0.7em;
+    font-weight: bold;
+}
+/* Dismiss Button */
+.dismiss-btn {
+    padding: 5px 10px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.dismiss-btn:hover {
+    background-color: #45a049;
+}
+
+/* Reported post IP address */
+.posts-table td:nth-child(4) {
+    font-size: 0.8em;
+    color: #666;
+}

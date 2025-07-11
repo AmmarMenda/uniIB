@@ -166,6 +166,11 @@ body {
     border: none;
     border-radius: 3px;
     cursor: pointer;
+    margin-right: 6px;
+}
+
+.post-actions button:last-of-type {
+    margin-right: 0;
 }
 
 .post-actions button:hover {
@@ -198,4 +203,45 @@ body {
     .reply {
         padding: 8px;
     }
+}
+/* Report Button Styling */
+.post-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.report-btn {
+    padding: 3px 8px;
+    background-color: #ff6b6b;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.85em;
+    margin-right: 6px;
+}
+
+.report-btn:hover {
+    background-color: #ff5252;
+}
+
+.reported-indicator {
+    color: #ff6b6b;
+    font-weight: bold;
+    font-size: 0.9em;
+    margin-left: 5px;
+}
+
+/* For reported posts */
+.post.reported {
+    border-left: 3px solid #ff6b6b;
+    background-color: #fff3f3;
+}
+
+/* For reported replies */
+.reply.reported {
+    border-left: 3px solid #ff6b6b;
+    background-color: #fff3f3;
 }

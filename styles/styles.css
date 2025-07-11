@@ -131,3 +131,23 @@ body.dark .board-list th {
         width: 50%; /* Larger percentage on small screens */
     }
 }
+/* Report Button Styles */
+.report-btn {
+    padding: 3px 8px;
+    background-color: #ff6b6b;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.8em;
+    margin-left: 5px;
+}
+
+.report-btn:hover {
+    background-color: #ff5252;
+}
+
+/* Post container for highlighting */
+.post-container {
+    position: relative;
+}

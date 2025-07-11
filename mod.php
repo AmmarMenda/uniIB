@@ -3,12 +3,11 @@ session_start();
 
 // Configuration
 $config = [
-    "admin_username" => "redditmod",
-    "admin_password" => "admin", // In production, use password_hash()
-    "posts_per_page" => 20,
-    "data_dir" => "b/posts/", // Directory where posts are stored
+    "admin_username" => "batman",
+    "admin_password" => "ammar007",
+    "data_dir" => "b/posts/",
+    "reports_dir" => "b/reports/",
     "backup_dir" => "b/backups/",
-    "base_url" => "", // Your site's base URL
 ];
 
 // Security headers
@@ -50,6 +49,7 @@ if (isset($_SESSION["authenticated"]) && isset($_POST["delete_post"])) {
     $post_file = $config["data_dir"] . $post_id . ".json";
 
     if (file_exists($post_file)) {
+        // This is a thread (OP post)
         // Create backup before deletion
         if (!is_dir($config["backup_dir"])) {
             mkdir($config["backup_dir"], 0755, true);
@@ -68,6 +68,20 @@ if (isset($_SESSION["authenticated"]) && isset($_POST["delete_post"])) {
             );
         }
 
+        // Also delete the report if exists
+        $report_file = $config["reports_dir"] . "report_" . $post_id . ".json";
+        if (file_exists($report_file)) {
+            rename(
+                $report_file,
+                $config["backup_dir"] .
+                    "deleted_report_" .
+                    $post_id .
+                    "_" .
+                    time() .
+                    ".json"
+            );
+        }
+
         rename(
             $post_file,
             $config["backup_dir"] .
@@ -78,30 +92,63 @@ if (isset($_SESSION["authenticated"]) && isset($_POST["delete_post"])) {
                 ".json"
         );
         $success_msg = "Post deleted successfully";
+    } else {
+        // This might be a reply, so search all threads for this reply ID
+        $thread_files = glob($config["data_dir"] . "*.json");
+        foreach ($thread_files as $thread_file) {
+            $thread_data = json_decode(file_get_contents($thread_file), true);
+            if (!empty($thread_data["replies"])) {
+                $found = false;
+                foreach ($thread_data["replies"] as $idx => $reply) {
+                    if ($reply["id"] == $post_id) {
+                        // Backup image if exists
+                        if (!empty($reply["file"]) && file_exists($config["data_dir"] . $reply["file"])) {
+                            rename(
+                                $config["data_dir"] . $reply["file"],
+                                $config["backup_dir"] . "deleted_" . $reply["file"]
+                            );
+                        }
+                        // Remove reply from array
+                        array_splice($thread_data["replies"], $idx, 1);
+                        $found = true;
+                        break;
+                    }
+                }
+                if ($found) {
+                    // Save updated thread file
+                    file_put_contents($thread_file, json_encode($thread_data));
+                    $success_msg = "Reply deleted successfully";
+                    break;
+                }
+            }
+        }
     }
 }
 
-// Get all posts
-$posts = [];
-if (isset($_SESSION["authenticated"]) && is_dir($config["data_dir"])) {
-    $post_files = scandir($config["data_dir"], SCANDIR_SORT_DESCENDING);
-    foreach ($post_files as $file) {
-        if ($file === "." || $file === "..") {
-            continue;
-        }
-        if (pathinfo($file, PATHINFO_EXTENSION) !== "json") {
-            continue;
-        }
+// Get reported posts
+$reported_posts = [];
+if (isset($_SESSION["authenticated"])) {
+    // First get all reports
+    if (is_dir($config["reports_dir"])) {
+        $report_files = scandir($config["reports_dir"]);
+        foreach ($report_files as $file) {
+            if ($file === "." || $file === "..") {
+                continue;
+            }
 
-        $post_content = file_get_contents($config["data_dir"] . $file);
-        $post_data = json_decode($post_content, true);
+            $report_data = json_decode(
+                file_get_contents($config["reports_dir"] . $file),
+                true
+            );
+            $post_file =
+                $config["data_dir"] . $report_data["post_id"] . ".json";
 
-        // Skip if invalid data
-        if (!is_array($post_data)) {
-            continue;
+            if (file_exists($post_file)) {
+                $post_data = json_decode(file_get_contents($post_file), true);
+                $post_data["report_data"] = $report_data;
+                $reported_posts[] = $post_data;
+            }
         }
-
-        $posts[] = $post_data;
     }
 }
 ?>
@@ -110,20 +157,9 @@ if (isset($_SESSION["authenticated"]) && is_dir($config["data_dir"])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Openchan /b/ - Moderator Panel</title>
-    <link rel="shortcut icon" href="favicon.png">
+    <title>Openchan /b/ - Reported Posts</title>
+    <link rel="shortcut icon" href="../favicon.png">
     <link rel="stylesheet" href="../styles/moderator.css">
-    <style>
-        .post-image {
-            max-width: 200px;
-            max-height: 200px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-        }
-        .post-image-container {
-            margin: 10px 0;
-        }
-    </style>
 </head>
 <body>
     <header id="nav">
@@ -159,14 +195,13 @@ if (isset($_SESSION["authenticated"]) && is_dir($config["data_dir"])) {
             </div>
         <?php else: ?>
             <div class="mod-panel">
-                <h1>/b/ Moderator Panel</h1>
+                <h1>Reported Posts</h1>
                 <p>Welcome, <?= htmlspecialchars($_SESSION["username"]) ?></p>
-                <p>Total Posts: <?= count($posts) ?></p>
+                <p>Total Reported Posts: <?= count($reported_posts) ?></p>
 
                 <div class="post-list">
-                    <h2>Recent Posts</h2>
-                    <?php if (empty($posts)): ?>
-                        <p>No posts found.</p>
+                    <?php if (empty($reported_posts)): ?>
+                        <p>No reported posts found.</p>
                     <?php else: ?>
                         <table class="posts-table">
                             <thead>
@@ -174,13 +209,13 @@ if (isset($_SESSION["authenticated"]) && is_dir($config["data_dir"])) {
                                     <th>Post ID</th>
                                     <th>Content</th>
                                     <th>Image</th>
-                                    <th>Date</th>
+                                    <th>Reported At</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($posts as $post): ?>
-                                <tr>
+                                <?php foreach ($reported_posts as $post): ?>
+                                <tr class="reported-post">
                                     <td><?= htmlspecialchars(
                                         substr($post["id"], 0, 8)
                                     ) ?>...</td>
@@ -220,16 +255,27 @@ if (isset($_SESSION["authenticated"]) && is_dir($config["data_dir"])) {
                                             </div>
                                         <?php endif; ?>
                                     </td>
-                                    <td><?= date(
-                                        "Y-m-d H:i:s",
-                                        $post["timestamp"]
-                                    ) ?></td>
+                                    <td>
+                                        <?= date(
+                                            "Y-m-d H:i:s",
+                                            $post["report_data"]["reported_at"]
+                                        ) ?><br>
+                                        IP: <?= htmlspecialchars(
+                                            $post["report_data"]["reported_by"]
+                                        ) ?>
+                                    </td>
                                     <td>
                                         <form method="post" onsubmit="return confirm('Delete this post?');">
                                             <input type="hidden" name="delete_post" value="<?= htmlspecialchars(
                                                 $post["id"]
                                             ) ?>">
                                             <button type="submit" class="delete-btn">Delete</button>
+                                        </form>
+                                        <form method="post" action="dismiss_report.php" style="margin-top: 5px;">
+                                            <input type="hidden" name="post_id" value="<?= htmlspecialchars(
+                                                $post["id"]
+                                            ) ?>">
+                                            <button type="submit" class="dismiss-btn">Dismiss Report</button>
                                         </form>
                                     </td>
                                 </tr>
