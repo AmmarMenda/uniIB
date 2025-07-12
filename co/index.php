@@ -1,3 +1,87 @@
+<?php
+// Enable error reporting
+ini_set("display_errors", 1);
+ini_set("display_startup_errors", 1);
+error_reporting(E_ALL);
+
+// Configuration
+$config = [
+    "data_dir" => "data/",
+    "submissions_file" => "submissions.json",
+    "allowed_types" => ["jpg", "jpeg", "png", "gif"],
+    "max_size" => 2 * 1024 * 1024, // 2MB
+];
+
+// Create directories if needed
+if (!file_exists($config["data_dir"])) {
+    mkdir($config["data_dir"], 0755, true);
+}
+
+// Initialize submissions file if it doesn't exist
+if (!file_exists($config["submissions_file"])) {
+    file_put_contents($config["submissions_file"], json_encode([]));
+}
+
+// Handle form submission
+$errors = [];
+$success = false;
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["submit"])) {
+    $submission = [
+        "name" => $_POST["sendername"] ?? "",
+        "department" => $_POST["senderdep"] ?? "",
+        "branch" => $_POST["senderbra"] ?? "",
+        "division" => $_POST["senderdiv"] ?? "",
+        "timestamp" => time(),
+        "ip" => $_SERVER["REMOTE_ADDR"],
+    ];
+
+    // Handle file upload
+    if (!empty($_FILES["fileToUpload"]["name"])) {
+        $file = $_FILES["fileToUpload"];
+        $ext = strtolower(pathinfo($file["name"], PATHINFO_EXTENSION));
+        $filename = uniqid() . "." . $ext;
+        $target = $config["data_dir"] . $filename;
+
+        // Validate file
+        if (!in_array($ext, $config["allowed_types"])) {
+            $errors[] = "Only JPG, JPEG, PNG & GIF files are allowed.";
+        } elseif ($file["size"] > $config["max_size"]) {
+            $errors[] = "File is too large (max 2MB).";
+        } elseif (!move_uploaded_file($file["tmp_name"], $target)) {
+            $errors[] = "Error uploading file.";
+        } else {
+            $submission["file"] = $filename;
+        }
+    }
+
+    if (empty($errors)) {
+        // Load existing submissions
+        $submissions = json_decode(
+            file_get_contents($config["submissions_file"]),
+            true
+        );
+        $submissions[] = $submission;
+        file_put_contents(
+            $config["submissions_file"],
+            json_encode($submissions, JSON_PRETTY_PRINT)
+        );
+
+        // Update counters
+        $count = file_exists("postcount.txt")
+            ? (int) file_get_contents("postcount.txt") + 1
+            : 1;
+        file_put_contents("postcount.txt", $count);
+        file_put_contents("lastupdated.txt", date("m-d-Y H:i:s")); // Updated this line
+
+        // Update overchan counter
+        $overchanCount = file_exists("../overchan/postcount.txt")
+            ? (int) file_get_contents("../overchan/postcount.txt") + 1
+            : 1;
+        file_put_contents("../overchan/postcount.txt", $overchanCount);
+        $success = true;
+    }
+}
+?>
 <!DOCTYPE html>
 <html>
     <head>
@@ -7,197 +91,180 @@
         <meta name="author" content="Anon">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="shortcut icon" href="../favicon.png">
-        <title>Openchan /b/</title>
-        <script defer src="../userstylesb.js"></script>
-        <link rel="stylesheet" href="../styles/base.css">
-        <?php
-            $db = "database.html";
-            $bn = "co";
-        ?>
+        <title>Openchan /co/ - Coordinator Form</title>
+        <script defer src="../js/userstyles.js"></script>
+        <link rel="stylesheet" href="../styles/styles.css">
+        <link rel="stylesheet" href="../styles/coordinator.css">
+        <style>
+            .success-popup {
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background-color: #4CAF50;
+                color: white;
+                padding: 15px 25px;
+                border-radius: 4px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                z-index: 1000;
+                animation: fadeInOut 3s ease-in-out forwards;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .success-popup::before {
+                content: "✓";
+                font-weight: bold;
+                font-size: 1.2em;
+            }
+
+            @keyframes fadeInOut {
+                0% { opacity: 0; top: 0; }
+                10% { opacity: 1; top: 20px; }
+                90% { opacity: 1; top: 20px; }
+                100% { opacity: 0; top: 0; }
+            }
+
+            body.dark .success-popup {
+                background-color: #2E7D32;
+            }
+        </style>
     </head>
     <body>
-    <div id="nav">&nbsp;
-        <span class='left'>
-            <?php include '../nav.php';
-            ?>
-        </span>
-        <span class="right">
-        <select name="cars" id="userstyleselecter" style="margin-top: -5px;" onchange="userstyle();">
-            <option value="Light">Light</option>
-            <option value="Dark">Dark</option>
-            <option value="Yotsuba">Yotsuba</option>
-            <option value="Yotsuba B">Yotsuba B</option>
-        </select>
-        </span>
-        </div>
+        <header id="nav">
+            <span class='left'>
+                <?php include "../nav.php"; ?>
+            </span>
+            <span class="right">
+                <select id="userstyleselecter" onchange="userstyle();">
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                    <option value="yotsuba">Yotsuba</option>
+                    <option value="yotsuba-b">Yotsuba B</option>
+                </select>
+            </span>
+        </header>
 
         <div id="head">
+            <?php if ($success): ?>
+                <div class="success-popup" id="successPopup">
+                    Form submitted successfully!
+                </div>
+                <script>
+                    setTimeout(() => {
+                        const popup = document.getElementById('successPopup');
+                        if (popup) popup.remove();
+                    }, 3000);
+                </script>
+            <?php endif; ?>
 
+            <?php if (!empty($errors)): ?>
+                <div class="error">
+                    <?php foreach ($errors as $error): ?>
+                        <p><?= htmlspecialchars($error) ?></p>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
 
-            <h1 style="color:white"><b>Cordinator Form</b></h1>
-                
+            <h1>Coordinator Form</h1>
 
-            <form role="form" action="index.php" method="post" enctype="multipart/form-data">
-                    <table>
+            <form class="coordinator-form" method="post" enctype="multipart/form-data">
+                <table class="form-table">
                     <tr>
-                    <td class="top">
-                    Name
-                    </td>
-                    <td>
-                    <input type = "text" class = "form-control" 
-                    name="sendername" placeholder = "Name"
-                     readonly required>
-                    </td>
+                        <td class="top">Name</td>
+                        <td>
+                            <input type="text" class="form-control"
+                                name="sendername" placeholder="Name" required>
+                        </td>
                     </tr>
                     <tr>
-                   <td>
-                    Department
-                    </td>
-                    <td>
-                    <input type = "text" class = "form-control" 
-                    name="senderdep" placeholder = "eg: PIT"
-                    " readonly required>
-                    </td>
+                        <td>Department</td>
+                        <td>
+                            <input type="text" class="form-control"
+                                name="senderdep" placeholder="eg: PIT" required>
+                        </td>
                     </tr>
-
                     <tr>
-                    <td>
-                    Branch
-                    </td>
-                    <td>
-                    <input type = "text" class = "form-control" 
-                    name="senderbra" placeholder = "eg: CSE"
-                    " readonly required>
-                    </td>
+                        <td>Branch</td>
+                        <td>
+                            <input type="text" class="form-control"
+                                name="senderbra" placeholder="eg: CSE" required>
+                        </td>
                     </tr>
-
                     <tr>
-                    <td>
-                    Division
-                    </td>
-                    <td>
-                    <input type = "text" class = "form-control" 
-                    name="senderdiv" placeholder = "eg: 6A1"
-                    " readonly required>
-                    </td>
+                        <td>Division</td>
+                        <td>
+                            <input type="text" class="form-control"
+                                name="senderdiv" placeholder="eg: 6A1" required>
+                        </td>
                     </tr>
-
                     <tr>
-                    <td class="boardhead">
-                    ID Card Image Upload
-                    </td>
-                    <td>
-                    <input type="file" name="fileToUpload" id="fileToUpload">
-                    </td>
+                        <td class="top">ID Card Image Upload</td>
+                        <td>
+                            <input type="file" name="fileToUpload" id="fileToUpload" class="form-control">
+                            <p class="small">(Max 2MB, JPG/PNG/GIF only)</p>
+                        </td>
                     </tr>
-
                     <tr>
-                    <td class="boardhead">
-                    SUBMIT
-                    </td>
-                    <td>
-                    <button class = "btn btn-lg btn-primary btn-block" type = "submit" 
-                    name = "submit">Submit</button>
-                    <?php 
-                    if (isset($_get['token']) && $_GET['token'] === "manage420") {
-                        echo '<button class = "btn btn-lg btn-primary btn-block" type = "submit" 
-                        name = "submitasmod"><rt>Mod Submit</rt></button>';
-                    }
-                    ?>
-                    </td>
+                        <td class="top">SUBMIT</td>
+                        <td>
+                            <button class="btn" type="submit" name="submit">Submit</button>
+                            <?php if (
+                                isset($_GET["token"]) &&
+                                $_GET["token"] === "manage420"
+                            ): ?>
+                                <button class="btn" type="submit" name="submitasmod">Mod Submit</button>
+                            <?php endif; ?>
+                        </td>
                     </tr>
-                    </table>
-                </form>
-
-
-<?php
-// Check if image file is a actual image or fake image
-$target_file = null;
-$uploadOk = 0;
-if(isset($_POST["submit"])) {
-    file_put_contents('postcount.txt',file_get_contents('postcount.txt') + 1);
-    file_put_contents('../overchan/postcount.txt',file_get_contents('../overchan/postcount.txt') + 1);
-
-    date_default_timezone_set("Asia/Kolkata");
-    file_put_contents('lastupdated.txt',date("m-d-y"));
-
-
-    if (empty($_FILES['fileToUpload']['name'])) {
-        $uploadOk = 0;
-    } else {
-    $target_dir = "data/";
-    $target_file = $target_dir . basename($_FILES["fileToUpload"]["name"]);
-    $uploadOk = 1;
-    $imageFileType = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
-
-    
-  $check = getimagesize($_FILES["fileToUpload"]["tmp_name"]);
-  if($check !== false) {
-    echo "File is an image - " . $check["mime"] . ".";
-    $uploadOk = 1;
-  } else {
-    echo "File is not an image.";
-    $uploadOk = 0;
-  }
-
-
-
-// Check file size
-//if ($_FILES["fileToUpload"]["size"] > 500000) {
-//  echo "Sorry, your file is too large.";
-// $uploadOk = 0;
-//}
-
-// Allow certain file formats
-if($imageFileType != "jpg" && $imageFileType != "png" && $imageFileType != "jpeg"
-&& $imageFileType != "gif" ) {
-  echo "Sorry, only JPG, JPEG, PNG & GIF files are allowed.";
-  $uploadOk = 0;
-}
-    }
-// Check if $uploadOk is set to 0 by an error
-if ($uploadOk == 0) {
-    file_put_contents($db,'<table id="' . file_get_contents('postcount.txt') . '"><tr><td class="top"><span class="left"><b>Anonymous <pt>#'. file_get_contents('postcount.txt') . '</pt></span><span class="right"> ' . date("m-d-y") . ' ' . date("h:i a") . ' </span></b></td></tr><tr><td>' . $_POST['content'] . '</td></tr></table>' . file_get_contents($db));
-    
-    // Overchan database
-    file_put_contents('../overchan/database.html','<table><tr><td class="top"><span class="left"><a class="highlight overchanlink" href="../' . $bn . '">/' . $bn . '/</a> <b>Anonymous  <pt>#'. file_get_contents('postcount.txt') . '</pt></span><span class="right"> ' . date("m-d-y") . ' ' . date("h:i a") . ' </span></b></td></tr><tr><td>' . $_POST['content'] . '</td></tr></table>' . file_get_contents('../overchan/database.html'));
-    
-    echo "<script>
-    window.location.href = '" , htmlspecialchars($_SERVER['PHP_SELF']) , "'
-    </script>";
-    echo "<br><br>It seems like you have javascript disabled, which prevented a redirect.<br><br>Please <a href='board.php'>click here</a> to visit the board.";// if everything is ok, try to upload file
-} else {
-  if (!move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], $target_file)) {
-    echo "Sorry, there was an error uploading your file.";
-  } else {
-    echo "The file ". htmlspecialchars( basename( $_FILES["fileToUpload"]["name"])). " has been uploaded.";
-    file_put_contents($db,'<table id="' . file_get_contents('postcount.txt') . '"><tr><td class="top"><span class="left"><b>Anonymous  <pt>#'. file_get_contents('postcount.txt') . '</pt></span><span class="right"> ' . date("m-d-y") . ' ' . date("h:i a") . ' </span></b></td></tr><tr><td><img src="data/'  . basename($_FILES["fileToUpload"]["name"]) . '"><br><br>' . $_POST['content'] . '</td></tr></table>' . file_get_contents($db));
-    
-    // Overchan databse
-    file_put_contents('../overchan/database.html','<table><tr><td class="top"><span class="left"><a class="highlight overchanlink" href="../' . $bn . '">/' . $bn . '/</a> <b>Anonymous  <pt>#'. file_get_contents('postcount.txt') . '</pt> </span><span class="right"> ' . date("m-d-y") . ' ' . date("h:i a") . ' </span></b></td></tr><tr><td><img src="../' . $bn . '/data' . '/' . basename($_FILES["fileToUpload"]["name"]) . '"><br><br>' . $_POST['content'] . '</td></tr></table>' . file_get_contents('../overchan/database.html'));
-
-    echo "<script>
-    window.location.href = '" , htmlspecialchars($_SERVER['PHP_SELF']) , "'
-    </script>";
-    echo "<br><br>It seems like you have javascript disabled, which prevented a redirect.<br><br>Please <a href='board.php'>click here</a> to visit the board.";  }
-}  
-    }
-?>
-
-<?php
-                        echo file_get_contents($db);
-                    ?>
-
+                </table>
+            </form>
         </div>
 
         <div id="content">
+            <?php
+            $submissions = json_decode(
+                file_get_contents($config["submissions_file"]),
+                true
+            );
+            if (!empty($submissions)): ?>
+                <div class="submissions-list">
+                    <h2>Recent Submissions</h2>
+                    <table class="form-table">
+                        <?php foreach (
+                            array_slice($submissions, 0, 5)
+                            as $sub
+                        ): ?>
+                        <tr>
+                            <td>
+                                <strong><?= htmlspecialchars(
+                                    $sub["name"]
+                                ) ?></strong><br>
+                                <?= htmlspecialchars($sub["department"]) ?> /
+                                <?= htmlspecialchars($sub["branch"]) ?> /
+                                <?= htmlspecialchars($sub["division"]) ?>
+                                <br>
+                                <small><?= date(
+                                    "m-d-y h:i a",
+                                    $sub["timestamp"]
+                                ) ?></small>
+                                <?php if (isset($sub["file"])): ?>
+                                    <br><a href="data/<?= htmlspecialchars(
+                                        $sub["file"]
+                                    ) ?>" target="_blank">View ID Card</a>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </table>
+                </div>
+            <?php endif;
+            ?>
         </div>
-        <div id="footer"></div>
-        <div id="pageparam"><?php
-            if (isset($_get['token'])) {
-            echo $_GET['token'];
-            }
-        ?></div>
-        
+
+        <footer id="footer">
+            <p>Openchan &copy; <?= date("Y") ?></p>
+        </footer>
     </body>
 </html>

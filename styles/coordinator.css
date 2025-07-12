@@ -1,0 +1,114 @@
+/* Coordinator Form Styles - Matches /b/ styling */
+#head {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    margin-bottom: 20px;
+}
+
+.coordinator-form {
+    margin-top: 20px;
+}
+
+.form-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.form-table td {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.form-table .top {
+    font-weight: bold;
+    background-color: #f5f5f5;
+    color: #117743;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    font-family: Arial, sans-serif;
+}
+
+.form-control:focus {
+    border-color: #117743;
+    outline: none;
+}
+
+.btn {
+    padding: 8px 15px;
+    background-color: #117743;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+}
+
+.btn:hover {
+    background-color: #0a5a36;
+}
+
+.error {
+    color: #f00;
+    margin: 10px 0;
+    padding: 10px;
+    background-color: #ffeeee;
+    border: 1px solid #ffdddd;
+    border-radius: 3px;
+}
+
+.small {
+    font-size: 0.8em;
+    color: #666;
+}
+
+.submissions-list {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+.submissions-list h2 {
+    color: #117743;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+/* Dark mode compatibility */
+body.dark #head,
+body.dark .submissions-list {
+    background-color: #222;
+    border-color: #444;
+    color: #eee;
+}
+
+body.dark .form-table td {
+    border-color: #444;
+}
+
+body.dark .form-table .top {
+    background-color: #333;
+    color: #4caf50;
+}
+
+body.dark .form-control {
+    background-color: #333;
+    border-color: #444;
+    color: #eee;
+}
+
+body.dark .small {
+    color: #aaa;
+}
