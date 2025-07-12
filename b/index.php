@@ -414,7 +414,7 @@ file_put_contents("lastupdated.txt", date("Y-m-d H:i:s"));
     </div>
 
     <footer id="footer">
-        <p>Openchan /b/ - Page generated at <?= date("Y-m-d H:i:s") ?></p>
+        <p>uniIB /b/ - Page generated at <?= date("Y-m-d H:i:s") ?></p>
     </footer>
 </body>
 </html>

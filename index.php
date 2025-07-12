@@ -37,7 +37,7 @@ file_put_contents("overchan/postcount.txt", $totalPosts);
     <body>
         <header id="nav">
             <span class='left'>
-                <?php include "includes/nav.php"; ?>
+                <?php include "nav.php"; ?>
             </span>
             <span class="right">
                 <select id="userstyleselecter" onchange="userstyle();">
@@ -60,8 +60,8 @@ file_put_contents("overchan/postcount.txt", $totalPosts);
 
                 <div class="board-info">
                     <section class="about">
-                        <h2>ABOUT OPENCHAN</h2>
-                        <p>This is website is for open discussions</p>
+                        <h2>ABOUT uniIB</h2>
+                        <p>This is website is for open discussions for university</p>
                     </section>
 
                     <section class="board-list">
@@ -116,7 +116,7 @@ file_put_contents("overchan/postcount.txt", $totalPosts);
         </main>
 
         <footer id="footer">
-            <p>Openchan &copy; <?= date("Y") ?></p>
+            <p>uniIB &copy; <?= date("Y") ?></p>
         </footer>
     </body>
 </html>

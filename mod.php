@@ -49,15 +49,69 @@ if (isset($_SESSION["authenticated"]) && isset($_POST["delete_post"])) {
     $post_file = $config["data_dir"] . $post_id . ".json";
 
     if (file_exists($post_file)) {
-        // This is a thread (OP post)
-        // Create backup before deletion
+        // Create backup directory if needed
         if (!is_dir($config["backup_dir"])) {
             mkdir($config["backup_dir"], 0755, true);
         }
 
+        // Check if this is a thread (OP post)
         $post_data = json_decode(file_get_contents($post_file), true);
+        $is_thread = $post_data["is_thread"] ?? false;
+        $replies_deleted = 0;
 
-        // Backup the image if exists
+        // If it's a thread, find and delete all its replies
+        if ($is_thread) {
+            $all_posts = glob($config["data_dir"] . "*.json");
+            foreach ($all_posts as $reply_file) {
+                $reply_data = json_decode(file_get_contents($reply_file), true);
+
+                // Check if this is a reply to the thread we're deleting
+                if (
+                    ($reply_data["thread_id"] ?? null) == $post_id &&
+                    !($reply_data["is_thread"] ?? false)
+                ) {
+                    // Backup reply image if exists
+                    if (
+                        !empty($reply_data["file"]) &&
+                        file_exists($config["data_dir"] . $reply_data["file"])
+                    ) {
+                        rename(
+                            $config["data_dir"] . $reply_data["file"],
+                            $config["backup_dir"] .
+                                "deleted_reply_" .
+                                basename($reply_data["file"])
+                        );
+                    }
+
+                    // Delete any reports for this reply
+                    $reply_report_file =
+                        $config["reports_dir"] .
+                        "report_" .
+                        $reply_data["id"] .
+                        ".json";
+                    if (file_exists($reply_report_file)) {
+                        rename(
+                            $reply_report_file,
+                            $config["backup_dir"] .
+                                "deleted_report_" .
+                                $reply_data["id"] .
+                                ".json"
+                        );
+                    }
+
+                    // Delete the reply JSON file
+                    rename(
+                        $reply_file,
+                        $config["backup_dir"] .
+                            "deleted_" .
+                            basename($reply_file)
+                    );
+                    $replies_deleted++;
+                }
+            }
+        }
+
+        // Backup the main post image if exists
         if (
             !empty($post_data["file"]) &&
             file_exists($config["data_dir"] . $post_data["file"])
@@ -68,7 +122,7 @@ if (isset($_SESSION["authenticated"]) && isset($_POST["delete_post"])) {
             );
         }
 
-        // Also delete the report if exists
+        // Delete any reports for the main post
         $report_file = $config["reports_dir"] . "report_" . $post_id . ".json";
         if (file_exists($report_file)) {
             rename(
@@ -82,6 +136,7 @@ if (isset($_SESSION["authenticated"]) && isset($_POST["delete_post"])) {
             );
         }
 
+        // Delete the main post file
         rename(
             $post_file,
             $config["backup_dir"] .
@@ -91,40 +146,49 @@ if (isset($_SESSION["authenticated"]) && isset($_POST["delete_post"])) {
                 time() .
                 ".json"
         );
-        $success_msg = "Post deleted successfully";
+
+        $success_msg = $is_thread
+            ? "Thread and $replies_deleted replies deleted successfully"
+            : "Post deleted successfully";
+
+        // Update post count
+        updatePostCount(-1 - $replies_deleted);
     } else {
-        // This might be a reply, so search all threads for this reply ID
-        $thread_files = glob($config["data_dir"] . "*.json");
-        foreach ($thread_files as $thread_file) {
-            $thread_data = json_decode(file_get_contents($thread_file), true);
-            if (!empty($thread_data["replies"])) {
-                $found = false;
-                foreach ($thread_data["replies"] as $idx => $reply) {
-                    if ($reply["id"] == $post_id) {
-                        // Backup image if exists
-                        if (!empty($reply["file"]) && file_exists($config["data_dir"] . $reply["file"])) {
-                            rename(
-                                $config["data_dir"] . $reply["file"],
-                                $config["backup_dir"] . "deleted_" . $reply["file"]
-                            );
-                        }
-                        // Remove reply from array
-                        array_splice($thread_data["replies"], $idx, 1);
-                        $found = true;
-                        break;
-                    }
-                }
-                if ($found) {
-                    // Save updated thread file
-                    file_put_contents($thread_file, json_encode($thread_data));
-                    $success_msg = "Reply deleted successfully";
-                    break;
-                }
-            }
-        }
+        // Handle case where post file doesn't exist
+        $error_msg = "Post not found";
     }
 }
 
+// Helper function to update post counts
+function updatePostCount($change)
+{
+    $count_file = "b/postcount.txt";
+    $overchan_file = "../overchan/postcount.txt";
+
+    if (file_exists($count_file)) {
+        $current = max(0, (int) file_get_contents($count_file) + $change);
+        file_put_contents($count_file, $current);
+    }
+
+    if (file_exists($overchan_file)) {
+        $current = max(0, (int) file_get_contents($overchan_file) + $change);
+        file_put_contents($overchan_file, $current);
+    }
+}
+// Handle backup clearance
+if (isset($_SESSION["authenticated"]) && isset($_POST["clear_backups"])) {
+    $backup_files = glob($config["backup_dir"] . "*");
+    $deleted_count = 0;
+
+    foreach ($backup_files as $file) {
+        if (is_file($file)) {
+            unlink($file);
+            $deleted_count++;
+        }
+    }
+
+    $success_msg = "Deleted $deleted_count backup files";
+}
 // Get reported posts
 $reported_posts = [];
 if (isset($_SESSION["authenticated"])) {
@@ -289,7 +353,12 @@ if (isset($_SESSION["authenticated"])) {
     </main>
 
     <footer id="footer">
-        <p>Openchan Moderator Panel &copy; <?= date("Y") ?></p>
+        <div class="mod-actions">
+            <form method="post" onsubmit="return confirm('Permanently delete ALL backup files? This cannot be undone!');">
+                <button type="submit" name="clear_backups" class="clear-backups-btn">Clear All Backups</button>
+            </form>
+        </div>
+        <p>uniIB Moderator Panel &copy; <?= date("Y") ?></p>
     </footer>
 </body>
 </html>

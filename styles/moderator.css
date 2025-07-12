@@ -286,3 +286,36 @@ body.dark .posts-table tr:hover {
     font-size: 0.8em;
     color: #666;
 }
+/* Backup Clear Button */
+.mod-actions {
+    margin: 20px 0;
+    padding: 15px;
+    border-radius: 4px;
+}
+
+.clear-backups-btn {
+    background-color: #ff5722;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.clear-backups-btn:hover {
+    background-color: #e64a19;
+}
+
+/* Dark mode styles */
+body.dark .mod-actions {
+    background-color: #333;
+}
+
+body.dark .clear-backups-btn {
+    background-color: #d84315;
+}
+
+body.dark .clear-backups-btn:hover {
+    background-color: #bf360c;
+}

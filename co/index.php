@@ -134,15 +134,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["submit"])) {
     <body>
         <header id="nav">
             <span class='left'>
-                <?php include "../nav.php"; ?>
+                <a href="../">Home</a>
             </span>
             <span class="right">
-                <select id="userstyleselecter" onchange="userstyle();">
-                    <option value="light">Light</option>
-                    <option value="dark">Dark</option>
-                    <option value="yotsuba">Yotsuba</option>
-                    <option value="yotsuba-b">Yotsuba B</option>
-                </select>
+                <a href="../co_mod.php">List All</a>
             </span>
         </header>
 

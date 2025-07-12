@@ -296,7 +296,7 @@ if (
     </main>
 
     <footer id="footer">
-        <p>Openchan Moderator Panel &copy; <?= date("Y") ?></p>
+        <p>uniIB Moderator Panel &copy; <?= date("Y") ?></p>
     </footer>
 </body>
 </html>
