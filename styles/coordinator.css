@@ -1,114 +1,187 @@
-/* Coordinator Form Styles - Matches /b/ styling */
-#head {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 3px;
-    margin-bottom: 20px;
+/* Windows 98 Palette & Fonts */
+body {
+    background: #008080;
+    color: #000;
+    font-family: "MS Sans Serif", Tahoma, sans-serif;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-.coordinator-form {
-    margin-top: 20px;
+/* Fieldsets as 98 windows */
+.field-set {
+    background: #c3c3c3;
+    border: 2px solid #fff;
+    box-shadow:
+        inset -2px -2px #fff,
+        inset 2px 2px #818181;
+    margin-bottom: 1em;
+    padding: 0.5em 1em;
 }
 
-.form-table {
+/* Form table styling - reduced spacing */
+.field-set table {
+    background: transparent;
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 20px;
+    border-spacing: 0;
 }
 
-.form-table td {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-}
-
-.form-table .top {
-    font-weight: bold;
-    background-color: #f5f5f5;
-    color: #117743;
-}
-
-.form-control {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 3px;
-    font-family: Arial, sans-serif;
-}
-
-.form-control:focus {
-    border-color: #117743;
-    outline: none;
-}
-
-.btn {
-    padding: 8px 15px;
-    background-color: #117743;
-    color: white;
+.field-set table td {
+    padding: 2px 4px;
+    background: transparent;
     border: none;
-    border-radius: 3px;
-    cursor: pointer;
-    font-family: Arial, sans-serif;
+    vertical-align: middle;
 }
 
-.btn:hover {
-    background-color: #0a5a36;
+/* Label column - make narrower and align right */
+.field-set table td:first-child {
+    width: 100px;
+    text-align: right;
+    padding-right: 8px;
+    font-weight: normal;
 }
 
-.error {
-    color: #f00;
-    margin: 10px 0;
-    padding: 10px;
-    background-color: #ffeeee;
-    border: 1px solid #ffdddd;
-    border-radius: 3px;
+/* Input column - full width minus label */
+.field-set table td:last-child {
+    width: auto;
+    padding-left: 4px;
 }
 
-.small {
+/* Windows 98 form input styling */
+.field-set input[type="text"],
+.field-set textarea,
+.field-set select {
+    background: #ffffff;
+    border: none;
+    box-shadow:
+        inset 1px 1px #818181,
+        inset -1px -1px #ffffff;
+    font-family: inherit;
+    padding: 2px 4px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.field-set input[type="file"] {
+    background: #c3c3c3;
+    border: none;
+    box-shadow:
+        1px 1px #ffffff,
+        -1px -1px #818181;
+    font-family: inherit;
+    padding: 2px;
+    width: 100%;
+}
+
+/* File help text */
+.file-help {
+    font-size: 0.8em;
+    color: #666;
+    margin-top: 2px;
+}
+
+/* Toolbar buttons */
+.toolbar-button {
+    margin-right: 0.5em;
+}
+
+/* Success window styling */
+.success-window {
+    background: #c3c3c3;
+}
+
+.success-window .title-bar {
+    background: #008000;
+    color: #ffffff;
+}
+
+.success-window .window-body {
+    color: #008000;
+    font-weight: bold;
+}
+
+/* Error window styling */
+.error-window {
+    background: #c3c3c3;
+}
+
+.error-window .title-bar {
+    background: #800000;
+    color: #ffffff;
+}
+
+.error-window .window-body {
+    color: #800000;
+    font-weight: bold;
+}
+
+/* Submissions list styling */
+.submissions-list {
+    background: transparent;
+}
+
+.submission-item {
+    background: #ffffff;
+    border: 1px solid #808080;
+    box-shadow:
+        inset 1px 1px #ffffff,
+        inset -1px -1px #808080;
+    margin-bottom: 8px;
+    padding: 6px;
+}
+
+.submission-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+    border-bottom: 1px dotted #c0c0c0;
+    padding-bottom: 2px;
+}
+
+.submission-header strong {
+    color: #000080;
+}
+
+.submission-time {
     font-size: 0.8em;
     color: #666;
 }
 
-.submissions-list {
-    max-width: 800px;
-    margin: 20px auto;
-    padding: 20px;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 3px;
+.submission-details {
+    font-size: 0.9em;
+    color: #000;
 }
 
-.submissions-list h2 {
-    color: #117743;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
+.id-link {
+    color: #0000ff;
+    text-decoration: none;
+    margin-left: 8px;
+    font-size: 0.8em;
 }
 
-/* Dark mode compatibility */
-body.dark #head,
-body.dark .submissions-list {
-    background-color: #222;
-    border-color: #444;
-    color: #eee;
+.id-link:hover {
+    text-decoration: underline;
 }
 
-body.dark .form-table td {
-    border-color: #444;
+/* Buttons */
+button.default {
+    font-size: 0.9em;
 }
 
-body.dark .form-table .top {
-    background-color: #333;
-    color: #4caf50;
-}
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .field-set table td:first-child {
+        width: 80px;
+        font-size: 0.9em;
+    }
 
-body.dark .form-control {
-    background-color: #333;
-    border-color: #444;
-    color: #eee;
-}
+    .submission-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 
-body.dark .small {
-    color: #aaa;
+    .submission-time {
+        margin-top: 2px;
+    }
 }

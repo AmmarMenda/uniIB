@@ -58,12 +58,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["submit"])) {
         // Load existing submissions
         $submissions = json_decode(
             file_get_contents($config["submissions_file"]),
-            true
+            true,
         );
         $submissions[] = $submission;
         file_put_contents(
             $config["submissions_file"],
-            json_encode($submissions, JSON_PRETTY_PRINT)
+            json_encode($submissions, JSON_PRETTY_PRINT),
         );
 
         // Update counters
@@ -71,7 +71,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["submit"])) {
             ? (int) file_get_contents("postcount.txt") + 1
             : 1;
         file_put_contents("postcount.txt", $count);
-        file_put_contents("lastupdated.txt", date("m-d-Y H:i:s")); // Updated this line
+        file_put_contents("lastupdated.txt", date("Y-m-d H:i:s"));
 
         // Update overchan counter
         $overchanCount = file_exists("../overchan/postcount.txt")
@@ -81,185 +81,151 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["submit"])) {
         $success = true;
     }
 }
+
+// Load submissions for display
+$submissions =
+    json_decode(file_get_contents($config["submissions_file"]), true) ?? [];
 ?>
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <meta name="keywords" content="Photos, Viewer">
-        <meta name="description" content="Photo Gallery">
-        <meta name="author" content="Anon">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="shortcut icon" href="../favicon.png">
-        <title>Openchan /co/ - Coordinator Form</title>
-        <script defer src="../js/userstyles.js"></script>
-        <link rel="stylesheet" href="../styles/styles.css">
-        <link rel="stylesheet" href="../styles/coordinator.css">
-        <style>
-            .success-popup {
-                position: fixed;
-                top: 20px;
-                left: 50%;
-                transform: translateX(-50%);
-                background-color: #4CAF50;
-                color: white;
-                padding: 15px 25px;
-                border-radius: 4px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-                z-index: 1000;
-                animation: fadeInOut 3s ease-in-out forwards;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-            }
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>/co/ - Coordinator Form – uniIB</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <!-- Windows 98 UI -->
+    <link rel="stylesheet" href="https://unpkg.com/98.css" />
+    <link rel="stylesheet" href="../styles/coordinator.css" />
+    <script defer src="../js/userstyles.js"></script>
+</head>
+<body class="windowed">
+    <!-- Title Bar -->
+    <div class="title-bar">
+        <div class="title-bar-text">/co/ - Coordinator Form</div>
+        <div class="title-bar-controls">
+            <button aria-label="Minimize"></button>
+            <button aria-label="Maximize"></button>
+            <button aria-label="Close"></button>
+        </div>
+    </div>
 
-            .success-popup::before {
-                content: "✓";
-                font-weight: bold;
-                font-size: 1.2em;
-            }
+    <div class="window" style="margin:1em; padding:1em;">
+        <!-- Toolbar -->
+        <div class="toolbar" style="display:flex; justify-content:space-between;">
+            <div>
+                <a href="../" class="toolbar-button">Home</a> &gt;
+                <span class="toolbar-button">/co/ - Coordinator Form</span>
+            </div>
+            <div>
+                <a href="../co_mod.php" class="toolbar-button">List All</a>
+            </div>
+        </div>
 
-            @keyframes fadeInOut {
-                0% { opacity: 0; top: 0; }
-                10% { opacity: 1; top: 20px; }
-                90% { opacity: 1; top: 20px; }
-                100% { opacity: 0; top: 0; }
-            }
-
-            body.dark .success-popup {
-                background-color: #2E7D32;
-            }
-        </style>
-    </head>
-    <body>
-        <header id="nav">
-            <span class='left'>
-                <a href="../">Home</a>
-            </span>
-            <span class="right">
-                <a href="../co_mod.php">List All</a>
-            </span>
-        </header>
-
-        <div id="head">
-            <?php if ($success): ?>
-                <div class="success-popup" id="successPopup">
-                    Form submitted successfully!
+        <!-- Success Message -->
+        <?php if ($success): ?>
+            <div class="window success-window" style="margin-bottom:1em;">
+                <div class="title-bar">
+                    <div class="title-bar-text">Success</div>
                 </div>
-                <script>
-                    setTimeout(() => {
-                        const popup = document.getElementById('successPopup');
-                        if (popup) popup.remove();
-                    }, 3000);
-                </script>
-            <?php endif; ?>
+                <div class="window-body">
+                    <p>✓ Form submitted successfully!</p>
+                </div>
+            </div>
+        <?php endif; ?>
 
-            <?php if (!empty($errors)): ?>
-                <div class="error">
+        <!-- Error Messages -->
+        <?php if (!empty($errors)): ?>
+            <div class="window error-window" style="margin-bottom:1em;">
+                <div class="title-bar">
+                    <div class="title-bar-text">Error</div>
+                </div>
+                <div class="window-body">
                     <?php foreach ($errors as $error): ?>
-                        <p><?= htmlspecialchars($error) ?></p>
+                        <p>⚠ <?= htmlspecialchars($error) ?></p>
                     <?php endforeach; ?>
                 </div>
-            <?php endif; ?>
+            </div>
+        <?php endif; ?>
 
-            <h1>Coordinator Form</h1>
-
-            <form class="coordinator-form" method="post" enctype="multipart/form-data">
-                <table class="form-table">
+        <!-- Main Form -->
+        <fieldset class="field-set">
+            <legend>Coordinator Application Form</legend>
+            <form method="post" enctype="multipart/form-data">
+                <table>
                     <tr>
-                        <td class="top">Name</td>
+                        <td>Name:</td>
+                        <td><input type="text" name="sendername" placeholder="Full Name" required></td>
+                    </tr>
+                    <tr>
+                        <td>Department:</td>
+                        <td><input type="text" name="senderdep" placeholder="e.g., PIT" required></td>
+                    </tr>
+                    <tr>
+                        <td>Branch:</td>
+                        <td><input type="text" name="senderbra" placeholder="e.g., CSE" required></td>
+                    </tr>
+                    <tr>
+                        <td>Division:</td>
+                        <td><input type="text" name="senderdiv" placeholder="e.g., 6A1" required></td>
+                    </tr>
+                    <tr>
+                        <td>ID Card:</td>
                         <td>
-                            <input type="text" class="form-control"
-                                name="sendername" placeholder="Name" required>
+                            <input type="file" name="fileToUpload" id="fileToUpload">
+                            <div class="file-help">Max 2MB, JPG/PNG/GIF only</div>
                         </td>
                     </tr>
                     <tr>
-                        <td>Department</td>
+                        <td></td>
                         <td>
-                            <input type="text" class="form-control"
-                                name="senderdep" placeholder="eg: PIT" required>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Branch</td>
-                        <td>
-                            <input type="text" class="form-control"
-                                name="senderbra" placeholder="eg: CSE" required>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Division</td>
-                        <td>
-                            <input type="text" class="form-control"
-                                name="senderdiv" placeholder="eg: 6A1" required>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="top">ID Card Image Upload</td>
-                        <td>
-                            <input type="file" name="fileToUpload" id="fileToUpload" class="form-control">
-                            <p class="small">(Max 2MB, JPG/PNG/GIF only)</p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="top">SUBMIT</td>
-                        <td>
-                            <button class="btn" type="submit" name="submit">Submit</button>
+                            <button class="default" type="submit" name="submit">Submit Application</button>
                             <?php if (
                                 isset($_GET["token"]) &&
                                 $_GET["token"] === "manage420"
                             ): ?>
-                                <button class="btn" type="submit" name="submitasmod">Mod Submit</button>
+                                <button class="default" type="submit" name="submitasmod" style="margin-left:8px;">Mod Submit</button>
                             <?php endif; ?>
                         </td>
                     </tr>
                 </table>
             </form>
-        </div>
+        </fieldset>
 
-        <div id="content">
-            <?php
-            $submissions = json_decode(
-                file_get_contents($config["submissions_file"]),
-                true
-            );
-            if (!empty($submissions)): ?>
+        <!-- Recent Submissions -->
+        <?php if (!empty($submissions)): ?>
+            <fieldset class="field-set">
+                <legend>Recent Submissions</legend>
                 <div class="submissions-list">
-                    <h2>Recent Submissions</h2>
-                    <table class="form-table">
-                        <?php foreach (
-                            array_slice($submissions, 0, 5)
-                            as $sub
-                        ): ?>
-                        <tr>
-                            <td>
+                    <?php foreach (array_slice($submissions, -5) as $sub): ?>
+                        <div class="submission-item">
+                            <div class="submission-header">
                                 <strong><?= htmlspecialchars(
-                                    $sub["name"]
-                                ) ?></strong><br>
+                                    $sub["name"],
+                                ) ?></strong>
+                                <span class="submission-time"><?= date(
+                                    "m/d/y H:i",
+                                    $sub["timestamp"],
+                                ) ?></span>
+                            </div>
+                            <div class="submission-details">
                                 <?= htmlspecialchars($sub["department"]) ?> /
                                 <?= htmlspecialchars($sub["branch"]) ?> /
                                 <?= htmlspecialchars($sub["division"]) ?>
-                                <br>
-                                <small><?= date(
-                                    "m-d-y h:i a",
-                                    $sub["timestamp"]
-                                ) ?></small>
                                 <?php if (isset($sub["file"])): ?>
-                                    <br><a href="data/<?= htmlspecialchars(
-                                        $sub["file"]
-                                    ) ?>" target="_blank">View ID Card</a>
+                                    <a href="data/<?= htmlspecialchars(
+                                        $sub["file"],
+                                    ) ?>" target="_blank" class="id-link">View ID Card</a>
                                 <?php endif; ?>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </table>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
-            <?php endif;
-            ?>
-        </div>
+            </fieldset>
+        <?php endif; ?>
 
-        <footer id="footer">
-            <p>Openchan &copy; <?= date("Y") ?></p>
+        <!-- Footer -->
+        <footer style="margin-top:1em; text-align:center;">
+            <p>uniIB /co/ – Generated <?= date("Y-m-d H:i:s") ?></p>
         </footer>
-    </body>
+    </div>
+</body>
 </html>

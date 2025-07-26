@@ -1,30 +1,24 @@
 <?php
 session_start();
-
-if (!isset($_SESSION['authenticated'])) {
-    header("HTTP/1.1 403 Forbidden");
-    exit;
+if (!isset($_SESSION["authenticated"])) {
+    http_response_code(403);
+    exit("Unauthorized");
 }
 
-$config = [
-    'reports_dir' => 'b/reports/',
-    'backup_dir' => 'b/backups/'
-];
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $post_id = $_POST["post_id"] ?? "";
+    $board = $_POST["board"] ?? "";
 
-if (isset($_POST['post_id'])) {
-    $post_id = basename($_POST['post_id']);
-    $report_file = $config['reports_dir'].'report_'.$post_id.'.json';
-    
-    if (file_exists($report_file)) {
-        if (!is_dir($config['backup_dir'])) {
-            mkdir($config['backup_dir'], 0755, true);
+    if ($post_id && $board) {
+        $reports_dir = "reports/";
+        $report_file = $reports_dir . "report_" . $post_id . ".json";
+        if (file_exists($report_file)) {
+            unlink($report_file);
+            // Optional: log or flag if removal fails
         }
-        
-        // Move report to backups
-        rename($report_file, $config['backup_dir'].'dismissed_'.$post_id.'_'.time().'.json');
     }
 }
-
+// Redirect back to the mod panel
 header("Location: mod.php");
-exit;
+exit();
 ?>

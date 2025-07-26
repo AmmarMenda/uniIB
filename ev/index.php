@@ -1,17 +1,16 @@
 <?php
 // Configuration
 $config = [
-    "board_title" => "/b/ - Random",
-    "description" => "Off-topic discussion",
+    "board_title" => "/ev/ Events",
+    "description" => "Discussions around events in university",
     "posts_per_page" => 10,
     "data_dir" => "posts/",
     "reports_dir" => "reports/",
     "allowed_file_types" => ["image/jpeg", "image/png", "image/gif"],
-    "max_file_size" => 2 * 1024 * 1024,
+    "max_file_size" => 2 * 1024 * 1024, // 2MB
     "max_threads" => 100,
     "max_replies" => 200,
 ];
-
 // Ensure directories exist
 foreach (["data_dir", "reports_dir"] as $d) {
     if (!file_exists($config[$d])) {

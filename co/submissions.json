@@ -25,5 +25,14 @@
         "timestamp": 1752321542,
         "ip": "127.0.0.1",
         "file": "68724e0671713.png"
+    },
+    {
+        "name": "Devanshi",
+        "department": "PIT",
+        "branch": "CSE",
+        "division": "7A13",
+        "timestamp": 1753431557,
+        "ip": "127.0.0.1",
+        "file": "68833e0547247.jpg"
     }
 ]

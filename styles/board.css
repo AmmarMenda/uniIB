@@ -1,247 +1,294 @@
-/* Base Styles */
+/* Windows 98 Palette & Fonts */
 body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-    margin: 0;
-    padding: 0;
-    background-color: #f0f0f0;
-    color: #333;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 10px;
+    background: #008080;
+    color: #000;
+    font-family: "MS Sans Serif", Tahoma, sans-serif;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-#nav {
-    background-color: #e0e0e0;
-    padding: 10px;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
+/* Fieldsets as 98 windows */
+.field-set {
+    background: #c3c3c3;
+    border: 2px solid #fff;
+    box-shadow:
+        inset -2px -2px #fff,
+        inset 2px 2px #818181;
+    margin-bottom: 1em;
+    padding: 0.5em 1em;
 }
 
-#board-header {
-    margin-bottom: 20px;
-    padding: 10px;
-    background-color: #fff;
-    border: 1px solid #ddd;
+/* Form table styling - reduced spacing */
+.field-set table {
+    background: transparent;
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
 }
 
-#post-form {
-    margin-bottom: 20px;
-    padding: 15px;
-    background-color: #f8f8f8;
-    border: 1px solid #ddd;
+.field-set table td {
+    padding: 2px 4px;
+    background: transparent;
+    border: none;
+    vertical-align: middle;
 }
 
-#post-form table {
+/* Label column - make narrower and align right */
+.field-set table td:first-child {
+    width: 80px;
+    text-align: right;
+    padding-right: 8px;
+    font-weight: normal;
+}
+
+/* Input column - full width minus label */
+.field-
+    width: auto;
+    padding-left: 4px;
+}
+
+/* Windows 98 form input styling - compact */
+.field-set input[type="text"],
+.field-set textarea,
+.field-set select {
+    background: #FFFFFF;
+    border: none;
+    box-shadow:
+        inset 1px 1px #818181,
+        inset -1px -1px #FFFFFF;
+    font-family: inherit;
+    padding: 2px 4px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Textarea specific - reduce height */
+.field-set textarea {
+    min-height: 60px;
+    resize: vertical;
+}
+
+.field-set input[type="file"] {
+    background: #C3C3C3;
+    border: none;
+    box-shadow:
+        1px 1px #FFFFFF,
+        -1px -1px #818181;
+    font-family: inherit;
+    padding: 2px;
     width: 100%;
 }
 
-#post-form textarea {
-    width: 100%;
-    min-height: 100px;
-}
-
-/* Post Styles */
-.post {
-    margin-bottom: 20px;
-    padding: 15px;
-    background-color: #fff;
-    border: 1px solid #ddd;
-}
-
-.post-header {
-    margin-bottom: 10px;
-    padding-bottom: 5px;
-    border-bottom: 1px solid #eee;
+/* Link buttons styled like Windows 98 buttons */
+a.default {
+    display: inline-block;
+    background: #C3C3C3;
+    border: none;
+    box-shadow:
+        1px 1px #FFFFFF,
+        -1px -1px #818181;
+    padding: 2px 8px;
+    font-family: inherit;
     font-size: 0.9em;
-    color: #666;
+    text-decoration: none;
+    color: #000;
+    cursor: pointer;
 }
 
-.post-subject {
-    font-weight: bold;
-    color: #117743;
-    margin-right: 10px;
+a.default:hover {
+    background: #D3D3D3;
 }
 
-.post-name {
-    color: #117743;
-    margin-right: 10px;
+a.default:active {
+    box-shadow:
+        inset 1px 1px #818181,
+        inset -1px -1px #FFFFFF;
 }
 
-.post-content {
-    display: flex;
+/* Toolbar buttons inherit 98.css */
+.toolbar-button {
+    margin-right: 0.5em;
 }
 
-.post-file {
-    margin-right: 20px;
-}
-
+/* Thumbnails */
 .thumbnail {
     max-width: 250px;
     max-height: 250px;
+    border: 2px solid #000;
+    box-shadow:
+        inset -1px -1px #fff,
+        inset 1px 1px #818181;
 }
 
-.post-message {
-    flex-grow: 1;
+/* OP Post header styling */
+.post-header {
+    margin-bottom: 8px;
+    padding: 4px 6px;
+    background: #E0E0E0;
+    border: 1px solid #808080;
+    box-shadow:
+        inset 1px 1px #FFFFFF,
+        inset -1px -1px #808080;
+    font-size: 0.9em;
+    color: #000080;
 }
 
-.error {
-    color: #f00;
-    font-weight: bold;
-}
-
-/* Footer */
-#footer {
-    margin-top: 20px;
-    padding: 10px;
-    text-align: center;
-    font-size: 0.8em;
-    color: #666;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .post-content {
-        flex-direction: column;
-    }
-
-    .post-file {
-        margin-right: 0;
-        margin-bottom: 10px;
-    }
-
-    .thumbnail {
-        max-width: 100%;
-    }
-}
-/* Thread Styles */
-.thread {
-    margin-bottom: 30px;
-    padding: 15px;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 3px;
-}
-
-.op-post {
-    margin-bottom: 10px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
-}
-
-.replies {
-    margin-left: 30px;
-}
-
-.reply {
-    margin-bottom: 10px;
-    padding: 10px;
-    background-color: #f9f9f9;
-    border-left: 3px solid #ddd;
-}
-
+/* Reply post header - different styling for visual distinction */
 .reply .post-header {
-    font-size: 0.8em;
-}
-
-.more-replies {
-    font-size: 0.8em;
-    color: #666;
-    text-align: center;
-    margin: 5px 0;
-}
-
-.post-actions {
-    margin-top: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.post-actions button {
-    padding: 5px 10px;
-    background-color: #117743;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-    margin-right: 6px;
-}
-
-.post-actions button:last-of-type {
-    margin-right: 0;
-}
-
-.post-actions button:hover {
-    background-color: #0a5a36;
-}
-
-.reply-count {
-    font-size: 0.8em;
-    color: #666;
-}
-
-.reply-form {
-    margin: 10px 0;
-    padding: 10px;
-    background-color: #f8f8f8;
-    border: 1px dashed #ddd;
-}
-
-.reply-form textarea {
-    width: 100%;
-    min-height: 80px;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .replies {
-        margin-left: 10px;
-    }
-
-    .reply {
-        padding: 8px;
-    }
-}
-/* Report Button Styling */
-.post-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 8px;
-}
-
-.report-btn {
-    padding: 3px 8px;
-    background-color: #ff6b6b;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
+    margin-bottom: 6px;
+    padding: 3px 5px;
+    background: #D0D0D0;
+    border: 1px solid #A0A0A0;
+    box-shadow:
+        inset 1px 1px #F0F0F0,
+        inset -1px -1px #A0A0A0;
     font-size: 0.85em;
-    margin-right: 6px;
+    color: #000060;
+    border-radius: 0;
+}
+
+/* Post name styling */
+.post-name {
+    font-weight: bold;
+    color: #008000;
+    margin-right: 8px;
+}
+
+/* Reply post name - slightly different color */
+.reply .post-name {
+    color: #006000;
+    font-weight: normal;
+}
+
+/* Post subject styling */
+.post-subject {
+    font-weight: bold;
+    color: #800080;
+    margin-right: 8px;
+}
+
+/* Post ID styling */
+.post-id {
+    color: #000080;
+    margin-right: 8px;
+    font-size: 0.9em;
+}
+
+/* Reply post ID - smaller and different color */
+.reply .post-id {
+    color: #000060;
+    font-size: 0.8em;
+}
+
+/* Post date styling */
+.post-date {
+    color: #606060;
+    font-size: 0.85em;
+}
+
+/* Reply post date - even smaller */
+.reply .post-date {
+    font-size: 0.8em;
+    color: #505050;
+}
+
+/* Buttons */
+button.default {
+    font-size: 0.9em;
+}
+
+/* Report button - improved Windows 98 styling */
+.report-btn {
+    display: inline-block;
+    padding: 2px 6px;
+    background: #FF6B6B;
+    color: #FFFFFF;
+    border: none;
+    box-shadow:
+        1px 1px #FFFFFF,
+        -1px -1px #CC4444;
+    font-family: inherit;
+    font-size: 0.8em;
+    cursor: pointer;
+    margin-left: 4px;
 }
 
 .report-btn:hover {
-    background-color: #ff5252;
+    background: #FF5252;
+    box-shadow:
+        1px 1px #FFFFFF,
+        -1px -1px #BB3333;
 }
 
-.reported-indicator {
-    color: #ff6b6b;
+.report-btn:active {
+    box-shadow:
+        inset 1px 1px #CC4444,
+        inset -1px -1px #FFFFFF;
+    background: #DD4444;
+}
+
+/* Reply form */
+.reply-form {
+    background: #f0f0f0;
+    border: 1px dashed #000;
+    margin: 0.5em 0;
+    padding: 0.5em;
+}
+
+/* Reply posts */
+.reply {
+    background: #F8F8F8;
+    border: 1px solid #C0C0C0;
+    border-left: 3px solid #808080;
+    margin: 0.5em 0;
+    padding: 0.4em;
+    box-shadow:
+        inset 1px 1px #FFFFFF,
+        inset -1px -1px #C0C0C0;
+}
+
+/* Post actions styling */
+.post-actions {
+    margin-top: 8px;
+    padding-top: 4px;
+    border-top: 1px dotted #C0C0C0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Reply actions - smaller gap */
+.reply .post-actions {
+    margin-top: 6px;
+    gap: 4px;
+    border-top: 1px dotted #D0D0D0;
+}
+
+/* Reply count styling */
+.reply-count {
+    font-size: 0.8em;
+    color: #666;
+    margin-left: auto;
+}
+
+/* "More replies" text */
+.more-replies {
+    text-align: center;
+    color: #666;
+    font-size: 0.8em;
+    font-style: italic;
+    padding: 4px;
+    background: #F0F0F0;
+    border: 1px dotted #C0C0C0;
+    margin: 0.5em 0;
+}
+
+/* Error message styling */
+.error {
+    color: #ff0000;
     font-weight: bold;
-    font-size: 0.9em;
-    margin-left: 5px;
-}
-
-/* For reported posts */
-.post.reported {
-    border-left: 3px solid #ff6b6b;
-    background-color: #fff3f3;
-}
-
-/* For reported replies */
-.reply.reported {
-    border-left: 3px solid #ff6b6b;
-    background-color: #fff3f3;
+    background: #ffeeee;
+    padding: 4px;
+    border: 1px solid #ff0000;
+    margin: 4px 0;
 }

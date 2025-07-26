@@ -1,153 +1,83 @@
-/* Base Styles */
+/* Override Windows 98 Palette */
 body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-    margin: 0;
-    padding: 0;
-    background-color: #f0f0f0;
-    color: #333;
+    background: #008080; /* teal desktop */
+    color: #000000; /* classic black text */
+    font-family: "MS Sans Serif", Tahoma, sans-serif;
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-#nav {
-    background-color: #e0e0e0;
-    padding: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+/* Ensure fieldsets use 98.css window border */
+.field-set {
+    background: #c3c3c3; /* window background */
+    border: 2px solid #ffffff; /* outset white */
+    box-shadow:
+        inset -2px -2px #ffffff,
+        inset 2px 2px #818181; /* dark gray inset */
+    padding: 0.5em 1em;
+    margin-bottom: 1em;
 }
 
-.logo {
-    max-width: 45%;
+/* Spinning Globe Panel and Image */
+.globe-panel {
+    text-align: center; /* Center the content */
+    max-width: 300px; /* Limit panel width for focus */
+    margin: 1em auto; /* Center the panel itself on the page */
+}
+
+.globe {
+    width: 100%; /* Full width of parent for scaling */
+    max-width: 200px; /* Max size to prevent overwhelming the page */
     height: auto;
-    margin: 10px;
-    display: block;
+    border: 2px solid #000000; /* Classic black border */
+    box-shadow:
+        inset -1px -1px #ffffff,
+        /* Light inset for 3D effect */ inset 1px 1px #818181; /* Dark inset shadow */
 }
 
-/* Board Info Styles */
-.board-info {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.about,
-.stats {
-    background-color: #fff;
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-.board-list table {
+/* Table styling */
+table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 20px;
-    background-color: #fff;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-top: 0.5em;
+}
+th,
+td {
+    padding: 4px 8px;
+    border: 1px solid #000000;
+}
+th {
+    background: #fdffff; /* off-white */
+    color: #000000;
+}
+tbody tr:nth-child(even) {
+    background: #e0e0e0;
+}
+a {
+    color: #010081; /* deep blue links */
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
 }
 
-.board-list th,
-.board-list td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
+/* Toolbar adjustments */
+select.toolbar {
+    font-size: 0.9em;
 }
 
-.board-list th {
-    background-color: #f5f5f5;
-    font-weight: bold;
-}
-
-.board-list tr:hover {
-    background-color: #f9f9f9;
-}
-
-/* Footer Styles */
-#footer {
-    text-align: center;
-    padding: 20px;
-    background-color: #e0e0e0;
-    margin-top: 20px;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .logo {
-        max-width: 80%;
-    }
-
-    .board-list table {
-        display: block;
-        overflow-x: auto;
-    }
-
-    #nav {
-        flex-direction: column;
-        text-align: center;
-    }
-
-    .left,
-    .right {
-        margin: 5px 0;
-    }
-}
-
-/* Theme Styles */
-body.dark {
-    background-color: #222;
-    color: #eee;
-}
-
-body.dark .about,
-body.dark .stats,
-body.dark .board-list table {
-    background-color: #333;
-    color: #eee;
-}
-
-body.dark .board-list th {
-    background-color: #444;
-}
-
-/* Add more theme styles as needed */
-/* Logo Styles */
-.logo-container {
-    display: flex;
-    justify-content: center;
-    margin: 20px 0;
-}
-
-.logo {
-    width: 30%; /* Adjust this percentage to make it smaller or larger */
-    max-width: 300px; /* Maximum size */
-    height: auto;
-    display: block;
-}
-
-/* For mobile responsiveness */
-@media (max-width: 768px) {
-    .logo {
-        width: 50%; /* Larger percentage on small screens */
-    }
-}
-/* Report Button Styles */
-.report-btn {
-    padding: 3px 8px;
-    background-color: #ff6b6b;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
+/* Footer custom tweaks */
+footer p {
+    margin: 0;
     font-size: 0.8em;
-    margin-left: 5px;
 }
 
-.report-btn:hover {
-    background-color: #ff5252;
-}
-
-/* Post container for highlighting */
-.post-container {
-    position: relative;
+/* Responsive adjustments for globe on small screens */
+@media (max-width: 768px) {
+    .globe-panel {
+        max-width: 100%; /* Full width on mobile */
+    }
+    .globe {
+        max-width: 150px; /* Smaller on mobile */
+    }
 }

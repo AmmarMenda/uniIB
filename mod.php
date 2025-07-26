@@ -5,14 +5,23 @@ session_start();
 $config = [
     "admin_username" => "batman",
     "admin_password" => "ammar007",
-    "data_dir" => "b/posts/",
-    "reports_dir" => "b/reports/",
-    "backup_dir" => "b/backups/",
+    "reports_dir" => "reports/",
+    "backup_dir" => "backups/",
 ];
 
 // Security headers
 header("X-Frame-Options: DENY");
 header("X-Content-Type-Options: nosniff");
+
+// Get all boards
+$boards = [];
+$dirs = glob("*/", GLOB_ONLYDIR);
+foreach ($dirs as $dir) {
+    $dir = rtrim($dir, "/");
+    if ($dir != "reports" && $dir != "backups" && $dir != "overchan") {
+        $boards[] = $dir;
+    }
+}
 
 // Handle logout
 if (isset($_GET["logout"])) {
@@ -45,8 +54,10 @@ if (
 
 // Handle post deletion
 if (isset($_SESSION["authenticated"]) && isset($_POST["delete_post"])) {
-    $post_id = basename($_POST["delete_post"]);
-    $post_file = $config["data_dir"] . $post_id . ".json";
+    $post_info = explode("|", $_POST["delete_post"]);
+    $board = $post_info[0];
+    $post_id = $post_info[1];
+    $post_file = "$board/posts/$post_id.json";
 
     if (file_exists($post_file)) {
         // Create backup directory if needed
@@ -61,11 +72,10 @@ if (isset($_SESSION["authenticated"]) && isset($_POST["delete_post"])) {
 
         // If it's a thread, find and delete all its replies
         if ($is_thread) {
-            $all_posts = glob($config["data_dir"] . "*.json");
+            $all_posts = glob("$board/posts/*.json");
             foreach ($all_posts as $reply_file) {
                 $reply_data = json_decode(file_get_contents($reply_file), true);
 
-                // Check if this is a reply to the thread we're deleting
                 if (
                     ($reply_data["thread_id"] ?? null) == $post_id &&
                     !($reply_data["is_thread"] ?? false)
@@ -73,10 +83,10 @@ if (isset($_SESSION["authenticated"]) && isset($_POST["delete_post"])) {
                     // Backup reply image if exists
                     if (
                         !empty($reply_data["file"]) &&
-                        file_exists($config["data_dir"] . $reply_data["file"])
+                        file_exists("$board/posts/" . $reply_data["file"])
                     ) {
                         rename(
-                            $config["data_dir"] . $reply_data["file"],
+                            "$board/posts/" . $reply_data["file"],
                             $config["backup_dir"] .
                                 "deleted_reply_" .
                                 basename($reply_data["file"])
@@ -114,10 +124,10 @@ if (isset($_SESSION["authenticated"]) && isset($_POST["delete_post"])) {
         // Backup the main post image if exists
         if (
             !empty($post_data["file"]) &&
-            file_exists($config["data_dir"] . $post_data["file"])
+            file_exists("$board/posts/" . $post_data["file"])
         ) {
             rename(
-                $config["data_dir"] . $post_data["file"],
+                "$board/posts/" . $post_data["file"],
                 $config["backup_dir"] . "deleted_" . $post_data["file"]
             );
         }
@@ -148,22 +158,20 @@ if (isset($_SESSION["authenticated"]) && isset($_POST["delete_post"])) {
         );
 
         $success_msg = $is_thread
-            ? "Thread and $replies_deleted replies deleted successfully"
-            : "Post deleted successfully";
+            ? "Thread and $replies_deleted replies deleted successfully from /$board/"
+            : "Post deleted successfully from /$board/";
 
         // Update post count
-        updatePostCount(-1 - $replies_deleted);
+        updatePostCount($board, -1 - $replies_deleted);
     } else {
-        // Handle case where post file doesn't exist
-        $error_msg = "Post not found";
+        $error_msg = "Post not found in /$board/";
     }
 }
 
-// Helper function to update post counts
-function updatePostCount($change)
+function updatePostCount($board, $change)
 {
-    $count_file = "b/postcount.txt";
-    $overchan_file = "../overchan/postcount.txt";
+    $count_file = "$board/postcount.txt";
+    $overchan_file = "overchan/postcount.txt";
 
     if (file_exists($count_file)) {
         $current = max(0, (int) file_get_contents($count_file) + $change);
@@ -175,6 +183,7 @@ function updatePostCount($change)
         file_put_contents($overchan_file, $current);
     }
 }
+
 // Handle backup clearance
 if (isset($_SESSION["authenticated"]) && isset($_POST["clear_backups"])) {
     $backup_files = glob($config["backup_dir"] . "*");
@@ -189,10 +198,10 @@ if (isset($_SESSION["authenticated"]) && isset($_POST["clear_backups"])) {
 
     $success_msg = "Deleted $deleted_count backup files";
 }
-// Get reported posts
+
+// Get reported posts from all boards
 $reported_posts = [];
 if (isset($_SESSION["authenticated"])) {
-    // First get all reports
     if (is_dir($config["reports_dir"])) {
         $report_files = scandir($config["reports_dir"]);
         foreach ($report_files as $file) {
@@ -204,16 +213,23 @@ if (isset($_SESSION["authenticated"])) {
                 file_get_contents($config["reports_dir"] . $file),
                 true
             );
-            $post_file =
-                $config["data_dir"] . $report_data["post_id"] . ".json";
+            $board = $report_data["board"] ?? "b"; // Default to 'b' for backward compatibility
+            $post_file = "$board/posts/" . $report_data["post_id"] . ".json";
 
             if (file_exists($post_file)) {
                 $post_data = json_decode(file_get_contents($post_file), true);
                 $post_data["report_data"] = $report_data;
+                $post_data["board"] = $board;
                 $reported_posts[] = $post_data;
             }
         }
     }
+
+    // Sort by report time (newest first)
+    usort($reported_posts, function ($a, $b) {
+        return $b["report_data"]["reported_at"] <=>
+            $a["report_data"]["reported_at"];
+    });
 }
 ?>
 <!DOCTYPE html>
@@ -221,14 +237,22 @@ if (isset($_SESSION["authenticated"])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Openchan /b/ - Reported Posts</title>
-    <link rel="shortcut icon" href="../favicon.png">
-    <link rel="stylesheet" href="../styles/moderator.css">
+    <title>Openchan Global Moderator Panel</title>
+    <link rel="shortcut icon" href="favicon.png">
+    <link rel="stylesheet" href="styles/moderator.css">
+    <style>
+        .board-tag {
+            background-color: #eef;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
 </head>
 <body>
     <header id="nav">
         <span class='left'>
-            <a href="../b/">Back to /b/</a>
+            <a href="/">Back to Home</a>
         </span>
         <span class="right">
             <?php if (isset($_SESSION["authenticated"])): ?>
@@ -250,7 +274,7 @@ if (isset($_SESSION["authenticated"])) {
 
         <?php if (!isset($_SESSION["authenticated"])): ?>
             <div class="login-container">
-                <h1>Moderator Login</h1>
+                <h1>Global Moderator Login</h1>
                 <form method="post" class="login-form">
                     <input type="text" name="username" placeholder="Username" required>
                     <input type="password" name="password" placeholder="Password" required>
@@ -259,17 +283,22 @@ if (isset($_SESSION["authenticated"])) {
             </div>
         <?php else: ?>
             <div class="mod-panel">
-                <h1>Reported Posts</h1>
+                <h1>Global Reported Posts</h1>
                 <p>Welcome, <?= htmlspecialchars($_SESSION["username"]) ?></p>
                 <p>Total Reported Posts: <?= count($reported_posts) ?></p>
+                <p>Active Boards: <?= implode(
+                    ", ",
+                    array_map(fn($b) => "/$b/", $boards)
+                ) ?></p>
 
                 <div class="post-list">
                     <?php if (empty($reported_posts)): ?>
-                        <p>No reported posts found.</p>
+                        <p>No reported posts found across all boards.</p>
                     <?php else: ?>
                         <table class="posts-table">
                             <thead>
                                 <tr>
+                                    <th>Board</th>
                                     <th>Post ID</th>
                                     <th>Content</th>
                                     <th>Image</th>
@@ -280,6 +309,9 @@ if (isset($_SESSION["authenticated"])) {
                             <tbody>
                                 <?php foreach ($reported_posts as $post): ?>
                                 <tr class="reported-post">
+                                    <td><span class="board-tag">/<?= htmlspecialchars(
+                                        $post["board"]
+                                    ) ?>/</span></td>
                                     <td><?= htmlspecialchars(
                                         substr($post["id"], 0, 8)
                                     ) ?>...</td>
@@ -305,13 +337,15 @@ if (isset($_SESSION["authenticated"])) {
                                         <?php if (
                                             !empty($post["file"]) &&
                                             file_exists(
-                                                $config["data_dir"] .
+                                                $post["board"] .
+                                                    "/posts/" .
                                                     $post["file"]
                                             )
                                         ): ?>
                                             <div class="post-image-container">
                                                 <img src="<?= htmlspecialchars(
-                                                    $config["data_dir"] .
+                                                    $post["board"] .
+                                                        "/posts/" .
                                                         $post["file"]
                                                 ) ?>"
                                                      class="post-image"
@@ -329,15 +363,22 @@ if (isset($_SESSION["authenticated"])) {
                                         ) ?>
                                     </td>
                                     <td>
-                                        <form method="post" onsubmit="return confirm('Delete this post?');">
+                                        <form method="post" onsubmit="return confirm('Delete this post from /<?= htmlspecialchars(
+                                            $post["board"]
+                                        ) ?>/?');">
                                             <input type="hidden" name="delete_post" value="<?= htmlspecialchars(
-                                                $post["id"]
+                                                $post["board"] .
+                                                    "|" .
+                                                    $post["id"]
                                             ) ?>">
                                             <button type="submit" class="delete-btn">Delete</button>
                                         </form>
                                         <form method="post" action="dismiss_report.php" style="margin-top: 5px;">
                                             <input type="hidden" name="post_id" value="<?= htmlspecialchars(
                                                 $post["id"]
+                                            ) ?>">
+                                            <input type="hidden" name="board" value="<?= htmlspecialchars(
+                                                $post["board"]
                                             ) ?>">
                                             <button type="submit" class="dismiss-btn">Dismiss Report</button>
                                         </form>
@@ -358,7 +399,7 @@ if (isset($_SESSION["authenticated"])) {
                 <button type="submit" name="clear_backups" class="clear-backups-btn">Clear All Backups</button>
             </form>
         </div>
-        <p>uniIB Moderator Panel &copy; <?= date("Y") ?></p>
+        <p>Openchan Global Moderator Panel &copy; <?= date("Y") ?></p>
     </footer>
 </body>
 </html>
