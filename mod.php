@@ -45,6 +45,7 @@ if (isset($_POST["login"])) {
     }
 }
 
+<<<<<<< HEAD
 // Delete post logic
 if (!empty($_SESSION["authenticated"]) && isset($_POST["delete_post"])) {
     [$board, $post_id] = explode("|", $_POST["delete_post"], 2);
@@ -108,6 +109,13 @@ if (!empty($_SESSION["authenticated"]) && isset($_POST["clear_backups"])) {
     }
     $success_msg = "Cleared {$count} backup files";
 }
+=======
+// Delete post logic (unchanged)...
+
+// Dismiss report logic moved to dismiss_report.php
+
+// Clear backups logic (unchanged)...
+>>>>>>> 4366fe25a15f52f187730caf0c153a6763cbff41
 
 // Load reported posts
 $reported_posts = [];
@@ -156,6 +164,7 @@ if (!empty($_SESSION["authenticated"])) {
 
   <main class="container">
     <?php if (!empty($error_msg)): ?>
+<<<<<<< HEAD
       <article class="card bg-error text-light"><div class="card-body"><?= htmlspecialchars(
           $error_msg,
       ) ?></div></article>
@@ -164,12 +173,23 @@ if (!empty($_SESSION["authenticated"])) {
       <article class="card bg-success text-light"><div class="card-body"><?= htmlspecialchars(
           $success_msg,
       ) ?></div></article>
+=======
+      <article class="card bg-error text-light">
+        <div class="card-body"><?= htmlspecialchars($error_msg) ?></div>
+      </article>
+    <?php endif; ?>
+    <?php if (!empty($success_msg)): ?>
+      <article class="card bg-success text-light">
+        <div class="card-body"><?= htmlspecialchars($success_msg) ?></div>
+      </article>
+>>>>>>> 4366fe25a15f52f187730caf0c153a6763cbff41
     <?php endif; ?>
 
     <?php if (empty($_SESSION["authenticated"])): ?>
       <section class="card">
         <header>Moderator Login</header>
         <div class="card-body">
+<<<<<<< HEAD
           <form method="post">
             <div class="row">
               <div class="col-4"><label>Username</label></div>
@@ -181,6 +201,19 @@ if (!empty($_SESSION["authenticated"])) {
             </div>
             <button class="button primary" name="login">Login</button>
           </form>
+=======
+            <form method="post">
+              <div class="row">
+                <div class="col-4"><label>Username</label></div>
+                <div class="col-8"><input name="username" required></div>
+              </div>
+              <div class="row">
+                <div class="col-4"><label>Password</label></div>
+                <div class="col-8"><input type="password" name="password" required></div>
+              </div>
+              <button class="button primary" name="login" type="submit">Login</button>
+            </form>
+>>>>>>> 4366fe25a15f52f187730caf0c153a6763cbff41
         </div>
       </section>
     <?php else: ?>
@@ -191,11 +224,19 @@ if (!empty($_SESSION["authenticated"])) {
         <?php else: ?>
           <table>
             <thead>
+<<<<<<< HEAD
               <tr><th>Board</th><th>ID</th><th>Content</th><th>Image</th><th>When</th><th>Actions</th></tr>
+=======
+              <tr>
+                <th>Board</th><th>Post ID</th><th>Content</th>
+                <th>Image</th><th>Reported At</th><th>Actions</th>
+              </tr>
+>>>>>>> 4366fe25a15f52f187730caf0c153a6763cbff41
             </thead>
             <tbody>
               <?php foreach ($reported_posts as $post): ?>
               <tr>
+<<<<<<< HEAD
                 <td><span class="tag">/<?= $post["board"] ?>/</span></td>
                 <td><?= htmlspecialchars(substr($post["id"], 0, 8)) ?>…</td>
                 <td><strong><?= htmlspecialchars($post["name"]) ?></strong><br>
@@ -210,6 +251,27 @@ if (!empty($_SESSION["authenticated"])) {
     "file"
 ] ?>" class="thumbnail">
                 <?php endif; ?></td>
+=======
+                <td><span class="tag">/<?= htmlspecialchars(
+                    $post["board"],
+                ) ?>/</span></td>
+                <td><?= htmlspecialchars(substr($post["id"], 0, 8)) ?>…</td>
+                <td>
+                  <strong><?= htmlspecialchars($post["name"]) ?></strong><br>
+                  <?php if ($post["subject"]): ?>
+                    <em><?= htmlspecialchars($post["subject"]) ?></em><br>
+                  <?php endif; ?>
+                  <?= nl2br(
+                      htmlspecialchars(substr($post["message"], 0, 200)),
+                  ) ?>
+                  <?php if (strlen($post["message"]) > 200): ?>…<?php endif; ?>
+                </td>
+                <td>
+                  <?php if (!empty($post["file"])): ?>
+                    <img src="<?= "{$post["board"]}/posts/{$post["file"]}" ?>" class="thumbnail" alt="">
+                  <?php endif; ?>
+                </td>
+>>>>>>> 4366fe25a15f52f187730caf0c153a6763cbff41
                 <td><?= date(
                     "Y-m-d H:i",
                     $post["report_data"]["reported_at"],
@@ -219,9 +281,13 @@ if (!empty($_SESSION["authenticated"])) {
                     ) ?></td>
                 <td>
                   <form method="post" style="display:inline">
+<<<<<<< HEAD
                     <input type="hidden" name="delete_post" value="<?= $post[
                         "board"
                     ] ?>|<?= $post["id"] ?>">
+=======
+                    <input type="hidden" name="delete_post" value="<?= "{$post["board"]}|{$post["id"]}" ?>">
+>>>>>>> 4366fe25a15f52f187730caf0c153a6763cbff41
                     <button class="button error small" onclick="return confirm('Delete?')">Delete</button>
                   </form>
                   <form method="post" action="dismiss_report.php" style="display:inline">
@@ -240,6 +306,10 @@ if (!empty($_SESSION["authenticated"])) {
           </table>
         <?php endif; ?>
       </section>
+<<<<<<< HEAD
+=======
+
+>>>>>>> 4366fe25a15f52f187730caf0c153a6763cbff41
       <section class="text-center">
         <form method="post" onsubmit="return confirm('Clear all backups?');">
           <button class="button outline">Clear Backups</button>
@@ -247,5 +317,12 @@ if (!empty($_SESSION["authenticated"])) {
       </section>
     <?php endif; ?>
   </main>
+<<<<<<< HEAD
+=======
+
+  <footer class="container text-center">
+    <p>uniIB Moderator Panel © <?= date("Y") ?></p>
+  </footer>
+>>>>>>> 4366fe25a15f52f187730caf0c153a6763cbff41
 </body>
 </html>
