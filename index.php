@@ -28,84 +28,90 @@ file_put_contents("overchan/postcount.txt", $totalPosts);
     <meta charset="UTF-8">
     <title>uniIB</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <!-- Windows 98 styles -->
-    <link rel="stylesheet" href="https://unpkg.com/98.css" />
-    <!-- Your custom overrides -->
-    <link rel="stylesheet" href="styles/styles.css" />
+    <link rel="stylesheet" href="https://unpkg.com/chota">
+    <link rel="stylesheet" href="styles/styles.css">  <!-- Custom overrides -->
     <script defer src="js/userstyles.js"></script>
 </head>
-<body class="windowed">
-  <div class="title-bar">
-    <div class="title-bar-text">uniIB Image Board</div>
-    <div class="title-bar-controls">
-      <button aria-label="Minimize"></button>
-      <button aria-label="Maximize"></button>
-      <button aria-label="Close"></button>
-    </div>
-  </div>
-
-  <div class="window" style="margin:1em; padding:1em;">
-    <!-- Navigation -->
-    <div class="toolbar" style="display:flex; justify-content:space-between;">
-
-    </div>
-
-    <!-- About Panel -->
-    <fieldset class="field-set">
-      <legend>About uniIB</legend>
-      <p>This website is for open discussions for university.</p>
-    </fieldset>
-
-    <!-- Spinning Globe GIF (Centered in the Middle) -->
-    <fieldset class="field-set globe-panel">
-      <legend>uniIB</legend>
-      <div style="text-align:center;">
-        <img src="static/openchan3.gif" alt="Spinning Globe" class="globe">
+<body>
+  <header>
+    <div class="row">
+      <div class="col-6">
+        <!-- Navigation -->
       </div>
-    </fieldset>
+      <div class="col-6 text-right">
+        <!-- Theme selector -->
+      </div>
+    </div>
+  </header>
 
-    <!-- Board List Panel -->
-    <fieldset class="field-set">
-      <legend>Board List</legend>
-      <table class="cell-border">
-        <thead>
-          <tr>
-            <th>Title</th><th>Description</th><th>Posts</th><th>Updated</th>
-          </tr>
-        </thead>
-        <tbody>
+  <div class="container">
+    <section>
+      <h2>About uniIB</h2>
+      <p>
+
+          uniIB is a simple image-based bulletin board where anyone can post comments and share images. There are boards dedicated to a variety of topics, from Random,Events etc. Users do not need to register an account before participating in the community. Feel free to click on a board below that interests you and jump right in!</p>
+<p>
+          Be sure to familiarize yourself with the <a href=./static/rules.php>Rules</a> before posting, and read the FAQ if you wish to learn more about how to use the site.
+</p>
+    </section>
+
+    <section class="text-center">
+      <h3>uniIB</h3>
+      <img src="static/openchan3.gif" alt="Spinning Globe" class="globe">
+    </section>
+
+    <section>
+      <h2>Board List</h2>
+      <div class="row board-card-row">
         <?php foreach ($boards as $dir => $board): ?>
-          <tr>
-            <td><a href="<?= htmlspecialchars($dir) ?>/"><?= htmlspecialchars(
-    $board["name"],
-) ?></a></td>
-            <td><?= htmlspecialchars($board["description"]) ?></td>
-            <td>
-              <?= file_exists("$dir/postcount.txt")
-                  ? htmlspecialchars(file_get_contents("$dir/postcount.txt"))
-                  : "0" ?>
-            </td>
-            <td>
-              <?= file_exists("$dir/lastupdated.txt")
-                  ? htmlspecialchars(file_get_contents("$dir/lastupdated.txt"))
-                  : "Never" ?>
-            </td>
-          </tr>
+          <div class="col board-card">
+            <div class="card">
+              <div class="img-container">
+                <img
+                  src="static/<?= htmlspecialchars($dir) ?>.jpeg"
+                  alt="<?= htmlspecialchars($board["name"]) ?> preview"
+                  class="board-preview-img"
+                  onerror="this.parentElement.style.display='none';"
+                >
+              </div>
+              <header style="margin: .7em 0 .45em 0;">
+                <a href="<?= htmlspecialchars($dir) ?>/"
+                   style="font-size:1.3em; font-weight:bold; text-decoration:none;">
+                  <?= htmlspecialchars($board["name"]) ?>
+                </a>
+              </header>
+              <div class="card-body">
+                <p><?= htmlspecialchars($board["description"]) ?></p>
+                <div class="board-meta">
+                  <strong>Posts:</strong>
+                  <?= file_exists("$dir/postcount.txt")
+                      ? htmlspecialchars(
+                          file_get_contents("$dir/postcount.txt"),
+                      )
+                      : "0" ?>
+                  <br>
+                  <strong>Updated:</strong>
+                  <?= file_exists("$dir/lastupdated.txt")
+                      ? htmlspecialchars(
+                          file_get_contents("$dir/lastupdated.txt"),
+                      )
+                      : "Never" ?>
+                </div>
+              </div>
+            </div>
+          </div>
         <?php endforeach; ?>
-        </tbody>
-      </table>
-    </fieldset>
+      </div>
+    </section>
 
-    <!-- Stats Panel -->
-    <fieldset class="field-set">
-      <legend>Stats</legend>
+    <section>
+      <h2>Stats</h2>
       <p><strong>Total Posts:</strong> <?= htmlspecialchars($totalPosts) ?></p>
-    </fieldset>
-
-    <!-- Footer -->
-    <footer style="margin-top:1em; text-align:center;">
-      <p>uniIB &copy; <?= date("Y") ?></p>
-    </footer>
+    </section>
   </div>
+
+  <footer class="text-center">
+    <p>uniIB &copy; <?= date("Y") ?></p>
+  </footer>
 </body>
 </html>

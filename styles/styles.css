@@ -1,83 +1,162 @@
-/* Override Windows 98 Palette */
+/* styles/styles.css - Custom overrides for Chota with dark mode */
+
+/* Light mode defaults (optional overrides) */
+:root {
+    --color-primary: #0d6efd; /* Blue accents */
+    --bg-color: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --color: #212529;
+    --font-size: 1rem;
+}
+
+/* Dark mode overrides */
+body.dark {
+    --bg-color: #212529;
+    --bg-secondary: #343a40;
+    --color: #f8f9fa;
+    --color-primary: #4dabf7; /* Lighter blue for visibility */
+}
+
+/* General styling */
 body {
-    background: #008080; /* teal desktop */
-    color: #000000; /* classic black text */
-    font-family: "MS Sans Serif", Tahoma, sans-serif;
-    -webkit-font-smoothing: none;
-    -moz-osx-font-smoothing: grayscale;
+    background: var(--bg-color);
+    color: var(--color);
+    font-family: system-ui, sans-serif;
 }
 
-/* Ensure fieldsets use 98.css window border */
-.field-set {
-    background: #c3c3c3; /* window background */
-    border: 2px solid #ffffff; /* outset white */
-    box-shadow:
-        inset -2px -2px #ffffff,
-        inset 2px 2px #818181; /* dark gray inset */
-    padding: 0.5em 1em;
-    margin-bottom: 1em;
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1rem;
 }
 
-/* Spinning Globe Panel and Image */
-.globe-panel {
-    text-align: center; /* Center the content */
-    max-width: 300px; /* Limit panel width for focus */
-    margin: 1em auto; /* Center the panel itself on the page */
+header,
+footer {
+    background: var(--bg-secondary);
+    padding: 1rem;
 }
 
-.globe {
-    width: 100%; /* Full width of parent for scaling */
-    max-width: 200px; /* Max size to prevent overwhelming the page */
-    height: auto;
-    border: 2px solid #000000; /* Classic black border */
-    box-shadow:
-        inset -1px -1px #ffffff,
-        /* Light inset for 3D effect */ inset 1px 1px #818181; /* Dark inset shadow */
-}
-
-/* Table styling */
 table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 0.5em;
+    margin: 1rem 0;
 }
+
 th,
 td {
-    padding: 4px 8px;
-    border: 1px solid #000000;
+    padding: 0.5rem;
+    border: 1px solid var(--color-primary);
+    text-align: left;
 }
+
 th {
-    background: #fdffff; /* off-white */
-    color: #000000;
+    background: var(--bg-secondary);
 }
-tbody tr:nth-child(even) {
-    background: #e0e0e0;
-}
+
 a {
-    color: #010081; /* deep blue links */
+    color: var(--color-primary);
     text-decoration: none;
 }
+
 a:hover {
     text-decoration: underline;
 }
 
-/* Toolbar adjustments */
-select.toolbar {
-    font-size: 0.9em;
+.text-center {
+    text-align: center;
 }
 
-/* Footer custom tweaks */
-footer p {
-    margin: 0;
-    font-size: 0.8em;
+.globe {
+    max-width: 200px;
+    height: auto;
+    margin: 1rem 0;
 }
 
-/* Responsive adjustments for globe on small screens */
+/* Responsive adjustments */
 @media (max-width: 768px) {
-    .globe-panel {
-        max-width: 100%; /* Full width on mobile */
+    .container {
+        padding: 0.5rem;
     }
-    .globe {
-        max-width: 150px; /* Smaller on mobile */
+}
+.board-card-row {
+    align-items: stretch;
+    margin: 2rem 0 2rem 0;
+}
+
+.board-card {
+    min-width: 220px;
+    max-width: 350px;
+    flex: 1 1 250px;
+    display: flex;
+}
+
+.board-card .card {
+    width: 100%;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: center;
+    border-width: 2px;
+    box-shadow: 0 2px 12px rgba(34, 34, 34, 0.08);
+    transition: transform 0.13s;
+}
+
+.board-card .card:hover {
+    transform: scale(1.045) translateY(-2px);
+    border-color: var(--color-primary);
+}
+
+.board-meta {
+    font-size: 0.98em;
+    margin-top: 1em;
+    color: #888;
+}
+
+/* Responsive: stack the cards */
+@media (max-width: 800px) {
+    .board-card-row {
+        flex-direction: column;
     }
+    .board-card {
+        max-width: 100%;
+        margin-bottom: 1rem;
+    }
+}
+.board-preview-img {
+    width: 100%;
+    max-width: 200px;
+    max-height: 120px;
+    object-fit: cover;
+    margin: 0 auto 10px auto;
+    border-radius: 0.4em;
+    box-shadow: 0 1px 6px rgba(40, 40, 70, 0.14);
+    display: block;
+}
+.board-card .card {
+    align-items: center;
+}
+.img-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    /* Fixed height keeps cards uniform even if some images are missing/short. Adjust as needed. */
+    max-height: 120px;
+    min-height: 80px;
+    background: #f8f8f8;
+    border-top-left-radius: 0.4em;
+    border-top-right-radius: 0.4em;
+    overflow: hidden;
+}
+
+.board-preview-img {
+    width: 100%;
+    max-width: 100%;
+    height: 120px;
+    object-fit: cover;
+    display: block;
+    border-radius: 0.4em 0.4em 0 0;
+    /* Optional: subtle shadow for separation */
+    box-shadow: 0 3px 12px 0 rgba(40, 40, 70, 0.07);
 }

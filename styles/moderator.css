@@ -1,321 +1,120 @@
-/* Base Styles */
+:root {
+    --bg: #ffffff;
+    --fg: #212529;
+    --fg-light: #f8f9fa;
+    --primary: #0d6efd;
+    --error: #dc3545;
+    --success: #198754;
+}
+
+body.dark {
+    --bg: #212529;
+    --fg: #f8f9fa;
+    --primary: #4dabf7;
+}
+
 body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-    margin: 0;
-    padding: 0;
-    background-color: #f5f5f5;
-    color: #333;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: system-ui, sans-serif;
 }
 
-#nav {
-    background-color: #333;
-    padding: 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: white;
+header {
+    background: var(--bg);
+    padding: 0.5rem 0;
 }
 
-#nav a {
-    color: white;
-    text-decoration: none;
-}
-
-#content {
-    flex: 1;
-    padding: 2rem;
-    max-width: 1200px;
+.container {
+    max-width: 900px;
     margin: 0 auto;
-    width: 100%;
-}
-
-#footer {
-    background-color: #333;
-    color: white;
-    text-align: center;
     padding: 1rem;
 }
 
-/* Login Styles */
-.login-container {
-    max-width: 400px;
-    margin: 2rem auto;
-    padding: 2rem;
-    background: white;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.login-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.login-form input {
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 3px;
-}
-
-.login-form button {
-    padding: 0.5rem;
-    background-color: #4caf50;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-}
-
-/* Mod Panel Styles */
-.mod-panel {
-    background: white;
-    padding: 2rem;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.board-editor {
-    margin-bottom: 2rem;
-    padding-bottom: 2rem;
-    border-bottom: 1px solid #eee;
-}
-
-.editor {
-    width: 100%;
-    min-height: 300px;
-    font-family: monospace;
-    padding: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 3px;
-    resize: vertical;
-}
-
-.board-editor button {
-    padding: 0.5rem 1rem;
-    background-color: #2196f3;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-    margin-top: 1rem;
-}
-
-/* Alert Messages */
-.alert {
-    padding: 1rem;
+h2 {
+    margin-top: 2rem;
     margin-bottom: 1rem;
-    border-radius: 3px;
+}
+
+.card {
+    margin: 1rem 0;
+}
+
+.card header {
+    font-weight: 600;
+    font-size: 1.1rem;
+    background: var(--primary);
+    color: var(--fg-light);
+    padding: 0.5rem;
+}
+
+.card-body {
+    padding: 1rem;
+    background: var(--bg);
+}
+
+.alert {
+    margin: 1rem 0;
 }
 
 .alert.error {
-    background-color: #ffdddd;
-    color: #d8000c;
-    border: 1px solid #d8000c;
+    background: rgba(220, 53, 69, 0.1);
+    border-left: 4px solid var(--error);
+    padding: 0.75rem;
 }
 
 .alert.success {
-    background-color: #ddffdd;
-    color: #4f8a10;
-    border: 1px solid #4f8a10;
+    background: rgba(25, 135, 84, 0.1);
+    border-left: 4px solid var(--success);
+    padding: 0.75rem;
 }
 
-/* Dark Mode */
-body.dark {
-    background-color: #222;
-    color: #eee;
-}
-
-body.dark .login-container,
-body.dark .mod-panel {
-    background-color: #333;
-    color: #eee;
-}
-
-body.dark .editor {
-    background-color: #444;
-    color: #eee;
-    border-color: #555;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    #nav {
-        flex-direction: column;
-        gap: 1rem;
-    }
-
-    .login-container,
-    .mod-panel {
-        padding: 1rem;
-    }
-}
-/* Post List Styles */
-.post-list {
-    margin-top: 2rem;
-}
-
-.posts-table {
+table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 1rem;
+    margin-bottom: 2rem;
 }
 
-.posts-table th,
-.posts-table td {
-    padding: 12px 15px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
+th,
+td {
+    border: 1px solid var(--primary);
+    padding: 0.5rem;
+    vertical-align: top;
 }
 
-.posts-table th {
-    background-color: #f5f5f5;
-    font-weight: bold;
-}
-
-.posts-table tr:hover {
-    background-color: #f9f9f9;
-}
-
-.post-content {
-    max-width: 400px;
-    word-wrap: break-word;
-}
-
-.delete-btn {
-    padding: 5px 10px;
-    background-color: #f44336;
-    color: white;
-    border: none;
+.tag {
+    background: var(--primary);
+    color: var(--fg-light);
+    padding: 2px 6px;
     border-radius: 3px;
-    cursor: pointer;
+    font-family: monospace;
 }
 
-.delete-btn:hover {
-    background-color: #d32f2f;
-}
-
-/* Dark Mode Adjustments */
-body.dark .posts-table th {
-    background-color: #444;
-}
-
-body.dark .posts-table tr:hover {
-    background-color: #333;
-}
-.post-image {
-    max-width: 200px;
-    max-height: 200px;
-    margin: 10px 0;
-    border: 1px solid #ddd;
-}
-
-.post-image-container {
-    margin: 10px 0;
-    text-align: center;
-}
-
-.post-image-cell {
-    width: 220px;
-}
-
-.post-content {
-    max-width: 400px;
-    word-wrap: break-word;
-}
-
-.post-content strong {
-    color: #117743;
-}
-
-.post-content em {
-    color: #cc1105;
-    font-style: italic;
-}
-/* Reported Post Styles */
-.reported-post {
-    background-color: #fff3f3;
-    border-left: 3px solid #ff6b6b;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% {
-        background-color: #fff3f3;
-    }
-    50% {
-        background-color: #ffecec;
-    }
-    100% {
-        background-color: #fff3f3;
-    }
-}
-
-.reported-label {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    background-color: #ff6b6b;
-    color: white;
-    padding: 2px 5px;
-    border-radius: 3px;
-    font-size: 0.7em;
-    font-weight: bold;
-}
-/* Dismiss Button */
-.dismiss-btn {
-    padding: 5px 10px;
-    background-color: #4caf50;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-    width: 100%;
-}
-
-.dismiss-btn:hover {
-    background-color: #45a049;
-}
-
-/* Reported post IP address */
-.posts-table td:nth-child(4) {
-    font-size: 0.8em;
-    color: #666;
-}
-/* Backup Clear Button */
-.mod-actions {
-    margin: 20px 0;
-    padding: 15px;
+.thumbnail {
+    max-width: 80px;
+    max-height: 80px;
+    object-fit: cover;
+    border: 1px solid #ccc;
     border-radius: 4px;
 }
 
-.clear-backups-btn {
-    background-color: #ff5722;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
+.button.primary {
+    background: var(--primary);
+    color: var(--fg-light);
+}
+.button.error {
+    background: var(--error);
+    color: var(--fg-light);
+}
+.button.outline {
+    background: transparent;
+    border: 1px solid var(--fg);
+    color: var(--fg);
+}
+.button.small {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.85rem;
 }
 
-.clear-backups-btn:hover {
-    background-color: #e64a19;
-}
-
-/* Dark mode styles */
-body.dark .mod-actions {
-    background-color: #333;
-}
-
-body.dark .clear-backups-btn {
-    background-color: #d84315;
-}
-
-body.dark .clear-backups-btn:hover {
-    background-color: #bf360c;
+footer {
+    margin: 2rem 0;
 }

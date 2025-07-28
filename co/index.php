@@ -92,41 +92,29 @@ $submissions =
     <meta charset="UTF-8">
     <title>/co/ - Coordinator Form – uniIB</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <!-- Windows 98 UI -->
-    <link rel="stylesheet" href="https://unpkg.com/98.css" />
-    <link rel="stylesheet" href="../styles/coordinator.css" />
+    <link rel="stylesheet" href="https://unpkg.com/chota">
+    <link rel="stylesheet" href="../styles/coordinator.css">
     <script defer src="../js/userstyles.js"></script>
 </head>
-<body class="windowed">
-    <!-- Title Bar -->
-    <div class="title-bar">
-        <div class="title-bar-text">/co/ - Coordinator Form</div>
-        <div class="title-bar-controls">
-            <button aria-label="Minimize"></button>
-            <button aria-label="Maximize"></button>
-            <button aria-label="Close"></button>
-        </div>
-    </div>
-
-    <div class="window" style="margin:1em; padding:1em;">
-        <!-- Toolbar -->
-        <div class="toolbar" style="display:flex; justify-content:space-between;">
-            <div>
-                <a href="../" class="toolbar-button">Home</a> &gt;
-                <span class="toolbar-button">/co/ - Coordinator Form</span>
+<body>
+    <header>
+        <div class="row">
+            <div class="col-6">
+                <a href="../">Home</a> &gt;
+                <span>/co/ - Coordinator Form</span>
             </div>
-            <div>
-                <a href="../co_mod.php" class="toolbar-button">List All</a>
+            <div class="col-6 text-right">
+                <a href="../co_mod.php">List All</a>
             </div>
         </div>
+    </header>
 
+    <div class="container">
         <!-- Success Message -->
         <?php if ($success): ?>
-            <div class="window success-window" style="margin-bottom:1em;">
-                <div class="title-bar">
-                    <div class="title-bar-text">Success</div>
-                </div>
-                <div class="window-body">
+            <div class="card bg-success text-light" style="margin-bottom:1rem;">
+                <header>Success</header>
+                <div class="card-body">
                     <p>✓ Form submitted successfully!</p>
                 </div>
             </div>
@@ -134,11 +122,9 @@ $submissions =
 
         <!-- Error Messages -->
         <?php if (!empty($errors)): ?>
-            <div class="window error-window" style="margin-bottom:1em;">
-                <div class="title-bar">
-                    <div class="title-bar-text">Error</div>
-                </div>
-                <div class="window-body">
+            <div class="card bg-error text-light" style="margin-bottom:1rem;">
+                <header>Error</header>
+                <div class="card-body">
                     <?php foreach ($errors as $error): ?>
                         <p>⚠ <?= htmlspecialchars($error) ?></p>
                     <?php endforeach; ?>
@@ -147,85 +133,88 @@ $submissions =
         <?php endif; ?>
 
         <!-- Main Form -->
-        <fieldset class="field-set">
-            <legend>Coordinator Application Form</legend>
+        <section>
+            <h2>Coordinator Application Form</h2>
             <form method="post" enctype="multipart/form-data">
-                <table>
-                    <tr>
-                        <td>Name:</td>
-                        <td><input type="text" name="sendername" placeholder="Full Name" required></td>
-                    </tr>
-                    <tr>
-                        <td>Department:</td>
-                        <td><input type="text" name="senderdep" placeholder="e.g., PIT" required></td>
-                    </tr>
-                    <tr>
-                        <td>Branch:</td>
-                        <td><input type="text" name="senderbra" placeholder="e.g., CSE" required></td>
-                    </tr>
-                    <tr>
-                        <td>Division:</td>
-                        <td><input type="text" name="senderdiv" placeholder="e.g., 6A1" required></td>
-                    </tr>
-                    <tr>
-                        <td>ID Card:</td>
-                        <td>
-                            <input type="file" name="fileToUpload" id="fileToUpload">
-                            <div class="file-help">Max 2MB, JPG/PNG/GIF only</div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td>
-                            <button class="default" type="submit" name="submit">Submit Application</button>
-                            <?php if (
-                                isset($_GET["token"]) &&
-                                $_GET["token"] === "manage420"
-                            ): ?>
-                                <button class="default" type="submit" name="submitasmod" style="margin-left:8px;">Mod Submit</button>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                </table>
+                <div class="row">
+                    <div class="col-3"><label>Name:</label></div>
+                    <div class="col-9"><input type="text" name="sendername" placeholder="Full Name" required></div>
+                </div>
+                <div class="row">
+                    <div class="col-3"><label>Department:</label></div>
+                    <div class="col-9"><input type="text" name="senderdep" placeholder="e.g., PIT" required></div>
+                </div>
+                <div class="row">
+                    <div class="col-3"><label>Branch:</label></div>
+                    <div class="col-9"><input type="text" name="senderbra" placeholder="e.g., CSE" required></div>
+                </div>
+                <div class="row">
+                    <div class="col-3"><label>Division:</label></div>
+                    <div class="col-9"><input type="text" name="senderdiv" placeholder="e.g., 6A1" required></div>
+                </div>
+                <div class="row">
+                    <div class="col-3"><label>ID Card:</label></div>
+                    <div class="col-9">
+                        <input type="file" name="fileToUpload" id="fileToUpload">
+                        <small class="text-grey">Max 2MB, JPG/PNG/GIF only</small>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-3"></div>
+                    <div class="col-9">
+                        <button class="button primary" type="submit" name="submit">Submit Application</button>
+                        <?php if (
+                            isset($_GET["token"]) &&
+                            $_GET["token"] === "manage420"
+                        ): ?>
+                            <button class="button outline" type="submit" name="submitasmod" style="margin-left:8px;">Mod Submit</button>
+                        <?php endif; ?>
+                    </div>
+                </div>
             </form>
-        </fieldset>
+        </section>
 
         <!-- Recent Submissions -->
         <?php if (!empty($submissions)): ?>
-            <fieldset class="field-set">
-                <legend>Recent Submissions</legend>
-                <div class="submissions-list">
-                    <?php foreach (array_slice($submissions, -5) as $sub): ?>
-                        <div class="submission-item">
-                            <div class="submission-header">
-                                <strong><?= htmlspecialchars(
-                                    $sub["name"],
-                                ) ?></strong>
-                                <span class="submission-time"><?= date(
-                                    "m/d/y H:i",
-                                    $sub["timestamp"],
-                                ) ?></span>
+            <section>
+                <h2>Recent Submissions</h2>
+                <?php foreach (array_slice($submissions, -5) as $sub): ?>
+                    <div class="card">
+                        <header>
+                            <div class="row">
+                                <div class="col">
+                                    <strong><?= htmlspecialchars(
+                                        $sub["name"],
+                                    ) ?></strong>
+                                </div>
+                                <div class="col text-right">
+                                    <small class="text-grey"><?= date(
+                                        "m/d/y H:i",
+                                        $sub["timestamp"],
+                                    ) ?></small>
+                                </div>
                             </div>
-                            <div class="submission-details">
+                        </header>
+                        <div class="card-body">
+                            <p>
                                 <?= htmlspecialchars($sub["department"]) ?> /
                                 <?= htmlspecialchars($sub["branch"]) ?> /
                                 <?= htmlspecialchars($sub["division"]) ?>
                                 <?php if (isset($sub["file"])): ?>
-                                    <a href="data/<?= htmlspecialchars(
+                                    <br><a href="data/<?= htmlspecialchars(
                                         $sub["file"],
-                                    ) ?>" target="_blank" class="id-link">View ID Card</a>
+                                    ) ?>" target="_blank">View ID Card</a>
                                 <?php endif; ?>
-                            </div>
+                            </p>
                         </div>
-                    <?php endforeach; ?>
-                </div>
-            </fieldset>
+                    </div>
+                <?php endforeach; ?>
+            </section>
         <?php endif; ?>
-
-        <!-- Footer -->
-        <footer style="margin-top:1em; text-align:center;">
-            <p>uniIB /co/ – Generated <?= date("Y-m-d H:i:s") ?></p>
-        </footer>
     </div>
+
+    <footer class="text-center">
+        <p>uniIB /co/ – Generated <?= date("Y-m-d H:i:s") ?></p>
+    </footer>
 </body>
 </html>

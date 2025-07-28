@@ -8,28 +8,23 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="shortcut icon" href="favicon.ico">
         <title>Openchan Rules</title>
-        <script defer src="../userstylesb.js"></script>
-        <link rel="stylesheet" href="../styles/base.css">
+        <link rel="stylesheet" href="../styles/styles.css">
     </head>
-    <body  style="height: 100vh;">
-        <div id="nav">&nbsp;
-        <span class='left'>
-            <?php include '../nav.php';
-            ?>
-        </span>
-        <span class="right">
-        <select name="cars" id="userstyleselecter" style="margin-top: -5px;" onchange="userstyle();">
-            <option value="Light">Light</option>
-            <option value="Dark">Dark</option>
-            <option value="Yotsuba">Yotsuba</option>
-            <option value="Yotsuba B">Yotsuba B</option>
-        </select>
-        </span>
+    <header>
+      <div class="row">
+        <div class="col-6">
+          <a href="../">Home</a>
         </div>
+        <div class="col-6 text-right">
+          <a href="../mod.php">Mod Panel</a>
+        </div>
+      </div>
+    </header>
+    <body  style="height: 100vh;">
 
         <div id="head">
 
-            <h1>Rules</h1> 
+            <h1>Rules</h1>
 
             <table>
                 <tr>
@@ -59,6 +54,6 @@
         </div>
         <div id="footer"></div>
         <div id="pageparam"></div>
-        
+
     </body>
 </html>
