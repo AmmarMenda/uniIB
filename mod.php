@@ -1,4 +1,9 @@
 <?php
+// Enable error reporting for debugging (remove in production)
+ini_set("display_errors", 1);
+ini_set("error_reporting", E_ALL);
+
+// Start session
 session_start();
 
 // Configuration
@@ -13,28 +18,28 @@ $config = [
 header("X-Frame-Options: DENY");
 header("X-Content-Type-Options: nosniff");
 
-// Collect boards
+// Collect board folders, excluding internal system dirs
 $boards = [];
 foreach (glob(__DIR__ . "/*", GLOB_ONLYDIR) as $dir) {
-    $b = basename($dir);
-    if (!in_array($b, ["reports", "backups", "overchan"])) {
-        $boards[] = $b;
+    $name = basename($dir);
+    if (!in_array($name, ["reports", "backups", "overchan"])) {
+        $boards[] = $name;
     }
 }
 
-// Logout
+// Handle logout
 if (isset($_GET["logout"])) {
     session_unset();
     session_destroy();
-    header("Location: " . strtok($_SERVER["REQUEST_URI"], "?"));
+    header("Location: " . basename(__FILE__));
     exit();
 }
 
-// Login
+// Handle login
 if (isset($_POST["login"])) {
     if (
-        $_POST["username"] === $config["admin_username"] &&
-        $_POST["password"] === $config["admin_password"]
+        ($_POST["username"] ?? "") === $config["admin_username"] &&
+        ($_POST["password"] ?? "") === $config["admin_password"]
     ) {
         $_SESSION["authenticated"] = true;
         $_SESSION["username"] = $config["admin_username"];
@@ -45,77 +50,99 @@ if (isset($_POST["login"])) {
     }
 }
 
-<<<<<<< HEAD
 // Delete post logic
 if (!empty($_SESSION["authenticated"]) && isset($_POST["delete_post"])) {
     [$board, $post_id] = explode("|", $_POST["delete_post"], 2);
-    $post_file = __DIR__ . "/{$board}/posts/{$post_id}.json";
-    if (file_exists($post_file)) {
-        // ensure backup dir
+    $postsDir = __DIR__ . "/{$board}/posts/";
+    $postFile = $postsDir . "{$post_id}.json";
+
+    if (file_exists($postFile)) {
+        // Ensure backup directory exists
         if (!is_dir($config["backup_dir"])) {
             mkdir($config["backup_dir"], 0755, true);
         }
-        // load post to check replies
-        $data = json_decode(file_get_contents($post_file), true);
-        $is_thread = !empty($data["is_thread"]);
-        $deleted_replies = 0;
-        if ($is_thread) {
-            foreach (glob(__DIR__ . "/{$board}/posts/*.json") as $replyFile) {
+
+        // Read main post data
+        $data = json_decode(file_get_contents($postFile), true);
+        $isThread = !empty($data["is_thread"]);
+
+        // Delete replies and their files if thread
+        $deletedReplies = 0;
+        if ($isThread) {
+            foreach (glob($postsDir . "*.json") as $replyFile) {
                 $r = json_decode(file_get_contents($replyFile), true);
                 if (
-                    !empty($r["thread_id"]) &&
-                    $r["thread_id"] == $post_id &&
-                    empty($r["is_thread"])
+                    empty($r["is_thread"]) &&
+                    ($r["thread_id"] ?? null) == $post_id
                 ) {
+                    // Delete reply image file if exists
+                    if (!empty($r["file"])) {
+                        $img = $postsDir . $r["file"];
+                        if (file_exists($img)) {
+                            unlink($img);
+                        }
+                    }
+                    // Move reply post json to backup
                     rename(
                         $replyFile,
                         $config["backup_dir"] . basename($replyFile),
                     );
-                    $deleted_replies++;
+                    $deletedReplies++;
                 }
             }
         }
-        // backup main post
-        rename($post_file, $config["backup_dir"] . basename($post_file));
-        $success_msg = $is_thread
-            ? "Deleted thread and {$deleted_replies} replies from /{$board}/"
+
+        // Delete main post image file if exists
+        if (!empty($data["file"])) {
+            $img = $postsDir . $data["file"];
+            if (file_exists($img)) {
+                unlink($img);
+            }
+        }
+
+        // Move main post JSON file to backup directory
+        rename($postFile, $config["backup_dir"] . basename($postFile));
+
+        // Remove associated report file if exists
+        $reportFile = $config["reports_dir"] . "report_{$post_id}.json";
+        if (file_exists($reportFile)) {
+            rename($reportFile, $config["backup_dir"] . basename($reportFile));
+        }
+
+        // Update post counts
+        $delta = $isThread ? -(1 + $deletedReplies) : -1;
+        $countFile = __DIR__ . "/{$board}/postcount.txt";
+        $overchanFile = __DIR__ . "/overchan/postcount.txt";
+
+        if (file_exists($countFile)) {
+            $newCount = max(0, (int) file_get_contents($countFile) + $delta);
+            file_put_contents($countFile, $newCount);
+        }
+        if (file_exists($overchanFile)) {
+            $newOver = max(0, (int) file_get_contents($overchanFile) + $delta);
+            file_put_contents($overchanFile, $newOver);
+        }
+
+        $success_msg = $isThread
+            ? "Deleted thread and {$deletedReplies} replies from /{$board}/"
             : "Deleted post from /{$board}/";
-        // update counts
-        $cntFile = __DIR__ . "/{$board}/postcount.txt";
-        $ovFile = __DIR__ . "/overchan/postcount.txt";
-        $chg = $is_thread ? (1 + $deleted_replies) * -1 : -1;
-        if (file_exists($cntFile)) {
-            $c = max(0, (int) file_get_contents($cntFile) + $chg);
-            file_put_contents($cntFile, $c);
-        }
-        if (file_exists($ovFile)) {
-            $c = max(0, (int) file_get_contents($ovFile) + $chg);
-            file_put_contents($ovFile, $c);
-        }
     } else {
-        $error_msg = "Post not found in /{$board}/";
+        $error_msg = "Post not found: /{$board}/posts/{$post_id}.json";
     }
 }
 
 // Clear backups logic
 if (!empty($_SESSION["authenticated"]) && isset($_POST["clear_backups"])) {
     $files = glob($config["backup_dir"] . "*");
-    $count = 0;
+    $deleted = 0;
     foreach ($files as $f) {
         if (is_file($f)) {
             unlink($f);
-            $count++;
+            $deleted++;
         }
     }
-    $success_msg = "Cleared {$count} backup files";
+    $success_msg = "Cleared {$deleted} backup files";
 }
-=======
-// Delete post logic (unchanged)...
-
-// Dismiss report logic moved to dismiss_report.php
-
-// Clear backups logic (unchanged)...
->>>>>>> 4366fe25a15f52f187730caf0c153a6763cbff41
 
 // Load reported posts
 $reported_posts = [];
@@ -144,13 +171,13 @@ if (!empty($_SESSION["authenticated"])) {
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Global Moderator Panel – uniIB</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link rel="stylesheet" href="https://unpkg.com/chota">
-  <link rel="stylesheet" href="styles/moderator.css">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="https://unpkg.com/chota" />
+  <link rel="stylesheet" href="styles/moderator.css" />
 </head>
-<body class="<?php echo $_SESSION["theme"] ?? "light"; ?>">
+<body class="<?= htmlspecialchars($_SESSION["theme"] ?? "light") ?>">
   <header>
     <div class="container row">
       <div class="col-6"><a href="/">Home</a></div>
@@ -164,7 +191,6 @@ if (!empty($_SESSION["authenticated"])) {
 
   <main class="container">
     <?php if (!empty($error_msg)): ?>
-<<<<<<< HEAD
       <article class="card bg-error text-light"><div class="card-body"><?= htmlspecialchars(
           $error_msg,
       ) ?></div></article>
@@ -173,47 +199,23 @@ if (!empty($_SESSION["authenticated"])) {
       <article class="card bg-success text-light"><div class="card-body"><?= htmlspecialchars(
           $success_msg,
       ) ?></div></article>
-=======
-      <article class="card bg-error text-light">
-        <div class="card-body"><?= htmlspecialchars($error_msg) ?></div>
-      </article>
-    <?php endif; ?>
-    <?php if (!empty($success_msg)): ?>
-      <article class="card bg-success text-light">
-        <div class="card-body"><?= htmlspecialchars($success_msg) ?></div>
-      </article>
->>>>>>> 4366fe25a15f52f187730caf0c153a6763cbff41
     <?php endif; ?>
 
     <?php if (empty($_SESSION["authenticated"])): ?>
       <section class="card">
         <header>Moderator Login</header>
         <div class="card-body">
-<<<<<<< HEAD
           <form method="post">
             <div class="row">
-              <div class="col-4"><label>Username</label></div>
-              <div class="col-8"><input name="username" required></div>
+              <div class="col-4"><label for="username">Username</label></div>
+              <div class="col-8"><input id="username" name="username" required /></div>
             </div>
             <div class="row">
-              <div class="col-4"><label>Password</label></div>
-              <div class="col-8"><input type="password" name="password" required></div>
+              <div class="col-4"><label for="password">Password</label></div>
+              <div class="col-8"><input id="password" type="password" name="password" required /></div>
             </div>
-            <button class="button primary" name="login">Login</button>
+            <button class="button primary" name="login" type="submit">Login</button>
           </form>
-=======
-            <form method="post">
-              <div class="row">
-                <div class="col-4"><label>Username</label></div>
-                <div class="col-8"><input name="username" required></div>
-              </div>
-              <div class="row">
-                <div class="col-4"><label>Password</label></div>
-                <div class="col-8"><input type="password" name="password" required></div>
-              </div>
-              <button class="button primary" name="login" type="submit">Login</button>
-            </form>
->>>>>>> 4366fe25a15f52f187730caf0c153a6763cbff41
         </div>
       </section>
     <?php else: ?>
@@ -224,105 +226,80 @@ if (!empty($_SESSION["authenticated"])) {
         <?php else: ?>
           <table>
             <thead>
-<<<<<<< HEAD
-              <tr><th>Board</th><th>ID</th><th>Content</th><th>Image</th><th>When</th><th>Actions</th></tr>
-=======
               <tr>
-                <th>Board</th><th>Post ID</th><th>Content</th>
-                <th>Image</th><th>Reported At</th><th>Actions</th>
+                <th>Board</th>
+                <th>Post ID</th>
+                <th>Content</th>
+                <th>Image</th>
+                <th>Reported At</th>
+                <th>Actions</th>
               </tr>
->>>>>>> 4366fe25a15f52f187730caf0c153a6763cbff41
             </thead>
             <tbody>
               <?php foreach ($reported_posts as $post): ?>
-              <tr>
-<<<<<<< HEAD
-                <td><span class="tag">/<?= $post["board"] ?>/</span></td>
-                <td><?= htmlspecialchars(substr($post["id"], 0, 8)) ?>…</td>
-                <td><strong><?= htmlspecialchars($post["name"]) ?></strong><br>
+                <tr>
+                  <td><span class="tag">/<?= htmlspecialchars(
+                      $post["board"],
+                  ) ?>/</span></td>
+                  <td><?= htmlspecialchars(substr($post["id"], 0, 8)) ?>…</td>
+                  <td>
+                    <strong><?= htmlspecialchars(
+                        $post["name"],
+                    ) ?></strong><br />
+                    <?php if ($post["subject"]): ?>
+                      <em><?= htmlspecialchars($post["subject"]) ?></em><br />
+                    <?php endif; ?>
                     <?= nl2br(
                         htmlspecialchars(substr($post["message"], 0, 200)),
                     ) ?>
                     <?php if (
                         strlen($post["message"]) > 200
-                    ): ?>…<?php endif; ?></td>
-                <td><?php if (!empty($post["file"])): ?>
-                  <img src="<?= $post["board"] ?>/posts/<?= $post[
-    "file"
-] ?>" class="thumbnail">
-                <?php endif; ?></td>
-=======
-                <td><span class="tag">/<?= htmlspecialchars(
-                    $post["board"],
-                ) ?>/</span></td>
-                <td><?= htmlspecialchars(substr($post["id"], 0, 8)) ?>…</td>
-                <td>
-                  <strong><?= htmlspecialchars($post["name"]) ?></strong><br>
-                  <?php if ($post["subject"]): ?>
-                    <em><?= htmlspecialchars($post["subject"]) ?></em><br>
-                  <?php endif; ?>
-                  <?= nl2br(
-                      htmlspecialchars(substr($post["message"], 0, 200)),
-                  ) ?>
-                  <?php if (strlen($post["message"]) > 200): ?>…<?php endif; ?>
-                </td>
-                <td>
-                  <?php if (!empty($post["file"])): ?>
-                    <img src="<?= "{$post["board"]}/posts/{$post["file"]}" ?>" class="thumbnail" alt="">
-                  <?php endif; ?>
-                </td>
->>>>>>> 4366fe25a15f52f187730caf0c153a6763cbff41
-                <td><?= date(
-                    "Y-m-d H:i",
-                    $post["report_data"]["reported_at"],
-                ) ?><br>
-                    <?= htmlspecialchars(
-                        $post["report_data"]["reported_by"],
-                    ) ?></td>
-                <td>
-                  <form method="post" style="display:inline">
-<<<<<<< HEAD
-                    <input type="hidden" name="delete_post" value="<?= $post[
-                        "board"
-                    ] ?>|<?= $post["id"] ?>">
-=======
-                    <input type="hidden" name="delete_post" value="<?= "{$post["board"]}|{$post["id"]}" ?>">
->>>>>>> 4366fe25a15f52f187730caf0c153a6763cbff41
-                    <button class="button error small" onclick="return confirm('Delete?')">Delete</button>
-                  </form>
-                  <form method="post" action="dismiss_report.php" style="display:inline">
-                    <input type="hidden" name="post_id" value="<?= $post[
-                        "id"
-                    ] ?>">
-                    <input type="hidden" name="board"   value="<?= $post[
-                        "board"
-                    ] ?>">
-                    <button class="button outline small">Dismiss</button>
-                  </form>
-                </td>
-              </tr>
+                    ): ?>&hellip;<?php endif; ?>
+                  </td>
+                  <td>
+                    <?php if (!empty($post["file"])): ?>
+                      <img src="<?= htmlspecialchars(
+                          "{$post["board"]}/posts/{$post["file"]}",
+                      ) ?>" class="thumbnail" alt="" />
+                    <?php endif; ?>
+                  </td>
+                  <td>
+                    <?= date(
+                        "Y-m-d H:i",
+                        $post["report_data"]["reported_at"],
+                    ) ?><br />
+                    <?= htmlspecialchars($post["report_data"]["reported_by"]) ?>
+                  </td>
+                  <td>
+                    <form method="post" style="display:inline">
+                      <input type="hidden" name="delete_post" value="<?= htmlspecialchars(
+                          "{$post["board"]}|{$post["id"]}",
+                      ) ?>" />
+                      <button class="button error small" onclick="return confirm('Delete this post?')">Delete</button>
+                    </form>
+                    <form method="post" action="dismiss_report.php" style="display:inline">
+                      <input type="hidden" name="post_id" value="<?= htmlspecialchars(
+                          $post["id"],
+                      ) ?>" />
+                      <input type="hidden" name="board" value="<?= htmlspecialchars(
+                          $post["board"],
+                      ) ?>" />
+                      <button class="button outline small">Dismiss</button>
+                    </form>
+                  </td>
+                </tr>
               <?php endforeach; ?>
             </tbody>
           </table>
         <?php endif; ?>
       </section>
-<<<<<<< HEAD
-=======
-
->>>>>>> 4366fe25a15f52f187730caf0c153a6763cbff41
       <section class="text-center">
         <form method="post" onsubmit="return confirm('Clear all backups?');">
-          <button class="button outline">Clear Backups</button>
+          <button class="button outline" name="clear_backups" type="submit">Clear Backups</button>
         </form>
       </section>
     <?php endif; ?>
   </main>
-<<<<<<< HEAD
-=======
 
-  <footer class="container text-center">
-    <p>uniIB Moderator Panel © <?= date("Y") ?></p>
-  </footer>
->>>>>>> 4366fe25a15f52f187730caf0c153a6763cbff41
 </body>
 </html>
