@@ -1,294 +1,158 @@
-/* Windows 98 Palette & Fonts */
+:root {
+    --color-primary: #0d6efd;
+    --bg-color: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --color: #212529;
+    --font-size: 1rem;
+}
+
+body.dark {
+    --bg-color: #212529;
+    --bg-secondary: #343a40;
+    --color: #f8f9fa;
+    --color-primary: #4dabf7;
+}
+
 body {
-    background: #008080;
-    color: #000;
-    font-family: "MS Sans Serif", Tahoma, sans-serif;
-    -webkit-font-smoothing: none;
-    -moz-osx-font-smoothing: grayscale;
+    background: var(--bg-color);
+    color: var(--color);
+    font-family: system-ui, sans-serif;
+}
+/* Post image smaller and aligned left */
+.thumbnail {
+    max-width: 150px;
+    max-height: 150px;
+    float: left;
+    margin-right: 12px;
+    margin-bottom: 8px;
 }
 
-/* Fieldsets as 98 windows */
-.field-set {
-    background: #c3c3c3;
-    border: 2px solid #fff;
-    box-shadow:
-        inset -2px -2px #fff,
-        inset 2px 2px #818181;
-    margin-bottom: 1em;
-    padding: 0.5em 1em;
+/* Clear float for post message to avoid layout issues */
+.post-message {
+    overflow: hidden;
 }
 
-/* Form table styling - reduced spacing */
-.field-set table {
-    background: transparent;
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+header,
+footer {
+    background: var(--bg-secondary);
+    padding: 1rem;
+}
+
+table {
     width: 100%;
     border-collapse: collapse;
-    border-spacing: 0;
+    margin: 1rem 0;
 }
 
-.field-set table td {
-    padding: 2px 4px;
-    background: transparent;
-    border: none;
-    vertical-align: middle;
+th,
+td {
+    padding: 0.5rem;
+    border: 1px solid var(--color-primary);
+    text-align: left;
 }
 
-/* Label column - make narrower and align right */
-.field-set table td:first-child {
-    width: 80px;
-    text-align: right;
-    padding-right: 8px;
-    font-weight: normal;
+th {
+    background: var(--bg-secondary);
 }
 
-/* Input column - full width minus label */
-.field-
-    width: auto;
-    padding-left: 4px;
+a {
+    color: var(--color-primary);
+    text-decoration: none;
 }
 
-/* Windows 98 form input styling - compact */
-.field-set input[type="text"],
-.field-set textarea,
-.field-set select {
-    background: #FFFFFF;
-    border: none;
-    box-shadow:
-        inset 1px 1px #818181,
-        inset -1px -1px #FFFFFF;
-    font-family: inherit;
-    padding: 2px 4px;
+a:hover {
+    text-decoration: underline;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.globe {
+    max-width: 200px;
+    height: auto;
+    margin: 1rem 0;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 0.5rem;
+    }
+}
+/* Container for board info and create thread form side by side */
+.board-main-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.board-info-card,
+.create-thread-card {
+    flex: 1 1 320px; /* Grow to fill space with min-width 320px */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    padding: 1rem;
+    background-color: var(--bg);
+}
+
+/* Fix for the form to be compact within its card */
+.create-thread-card form > div {
+    margin-bottom: 0.75rem;
+}
+
+/* Make the input labels and inputs flex aligned to reduce vertical space */
+.create-thread-card label {
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+}
+
+.create-thread-card input[type="text"],
+.create-thread-card textarea {
     width: 100%;
     box-sizing: border-box;
+    padding: 0.4em 0.5em;
+    font-size: 0.9rem;
 }
 
-/* Textarea specific - reduce height */
-.field-set textarea {
-    min-height: 60px;
-    resize: vertical;
+/* Responsive: stack vertically on small screens */
+@media (max-width: 768px) {
+    .board-main-container {
+        flex-direction: column;
+    }
+}
+/* Ensure images stay within thread card */
+.post-file {
+    max-width: 100%; /* Prevent horizontal overflow */
+    margin: 0 auto 1rem auto; /* Center with bottom spacing */
 }
 
-.field-set input[type="file"] {
-    background: #C3C3C3;
-    border: none;
-    box-shadow:
-        1px 1px #FFFFFF,
-        -1px -1px #818181;
-    font-family: inherit;
-    padding: 2px;
-    width: 100%;
-}
-
-/* Link buttons styled like Windows 98 buttons */
-a.default {
-    display: inline-block;
-    background: #C3C3C3;
-    border: none;
-    box-shadow:
-        1px 1px #FFFFFF,
-        -1px -1px #818181;
-    padding: 2px 8px;
-    font-family: inherit;
-    font-size: 0.9em;
-    text-decoration: none;
-    color: #000;
-    cursor: pointer;
-}
-
-a.default:hover {
-    background: #D3D3D3;
-}
-
-a.default:active {
-    box-shadow:
-        inset 1px 1px #818181,
-        inset -1px -1px #FFFFFF;
-}
-
-/* Toolbar buttons inherit 98.css */
-.toolbar-button {
-    margin-right: 0.5em;
-}
-
-/* Thumbnails */
 .thumbnail {
-    max-width: 250px;
-    max-height: 250px;
-    border: 2px solid #000;
-    box-shadow:
-        inset -1px -1px #fff,
-        inset 1px 1px #818181;
+    max-width: 100%; /* Fit to card width */
+    max-height: 300px; /* Limit vertical size to avoid tall image overflow */
+    height: auto; /* Maintain aspect ratio */
+    display: block; /* Block-level for proper containment */
+    object-fit: contain; /* Fit image without cropping or distortion */
+    border-radius: 4px; /* Optional: rounded corners */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
 }
 
-/* OP Post header styling */
-.post-header {
-    margin-bottom: 8px;
-    padding: 4px 6px;
-    background: #E0E0E0;
-    border: 1px solid #808080;
-    box-shadow:
-        inset 1px 1px #FFFFFF,
-        inset -1px -1px #808080;
-    font-size: 0.9em;
-    color: #000080;
+/* Clear any floats and ensure content doesn't wrap oddly */
+.post-content {
+    overflow: hidden; /* Contain floated elements */
+    clear: both; /* Clear previous floats */
 }
 
-/* Reply post header - different styling for visual distinction */
-.reply .post-header {
-    margin-bottom: 6px;
-    padding: 3px 5px;
-    background: #D0D0D0;
-    border: 1px solid #A0A0A0;
-    box-shadow:
-        inset 1px 1px #F0F0F0,
-        inset -1px -1px #A0A0A0;
-    font-size: 0.85em;
-    color: #000060;
-    border-radius: 0;
+/* Card body padding to give space around content */
+.card-body {
+    padding: 1rem;
 }
-
-/* Post name styling */
-.post-name {
-    font-weight: bold;
-    color: #008000;
-    margin-right: 8px;
-}
-
-/* Reply post name - slightly different color */
-.reply .post-name {
-    color: #006000;
-    font-weight: normal;
-}
-
-/* Post subject styling */
-.post-subject {
-    font-weight: bold;
-    color: #800080;
-    margin-right: 8px;
-}
-
-/* Post ID styling */
-.post-id {
-    color: #000080;
-    margin-right: 8px;
-    font-size: 0.9em;
-}
-
-/* Reply post ID - smaller and different color */
-.reply .post-id {
-    color: #000060;
-    font-size: 0.8em;
-}
-
-/* Post date styling */
-.post-date {
-    color: #606060;
-    font-size: 0.85em;
-}
-
-/* Reply post date - even smaller */
-.reply .post-date {
-    font-size: 0.8em;
-    color: #505050;
-}
-
-/* Buttons */
-button.default {
-    font-size: 0.9em;
-}
-
-/* Report button - improved Windows 98 styling */
-.report-btn {
-    display: inline-block;
-    padding: 2px 6px;
-    background: #FF6B6B;
-    color: #FFFFFF;
-    border: none;
-    box-shadow:
-        1px 1px #FFFFFF,
-        -1px -1px #CC4444;
-    font-family: inherit;
-    font-size: 0.8em;
-    cursor: pointer;
-    margin-left: 4px;
-}
-
-.report-btn:hover {
-    background: #FF5252;
-    box-shadow:
-        1px 1px #FFFFFF,
-        -1px -1px #BB3333;
-}
-
-.report-btn:active {
-    box-shadow:
-        inset 1px 1px #CC4444,
-        inset -1px -1px #FFFFFF;
-    background: #DD4444;
-}
-
-/* Reply form */
-.reply-form {
-    background: #f0f0f0;
-    border: 1px dashed #000;
-    margin: 0.5em 0;
-    padding: 0.5em;
-}
-
-/* Reply posts */
-.reply {
-    background: #F8F8F8;
-    border: 1px solid #C0C0C0;
-    border-left: 3px solid #808080;
-    margin: 0.5em 0;
-    padding: 0.4em;
-    box-shadow:
-        inset 1px 1px #FFFFFF,
-        inset -1px -1px #C0C0C0;
-}
-
-/* Post actions styling */
-.post-actions {
-    margin-top: 8px;
-    padding-top: 4px;
-    border-top: 1px dotted #C0C0C0;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-/* Reply actions - smaller gap */
-.reply .post-actions {
-    margin-top: 6px;
-    gap: 4px;
-    border-top: 1px dotted #D0D0D0;
-}
-
-/* Reply count styling */
-.reply-count {
-    font-size: 0.8em;
-    color: #666;
-    margin-left: auto;
-}
-
-/* "More replies" text */
-.more-replies {
-    text-align: center;
-    color: #666;
-    font-size: 0.8em;
-    font-style: italic;
-    padding: 4px;
-    background: #F0F0F0;
-    border: 1px dotted #C0C0C0;
-    margin: 0.5em 0;
-}
-
-/* Error message styling */
-.error {
-    color: #ff0000;
-    font-weight: bold;
-    background: #ffeeee;
-    padding: 4px;
-    border: 1px solid #ff0000;
-    margin: 4px 0;
+.greentext {
+    color: #789922;
 }

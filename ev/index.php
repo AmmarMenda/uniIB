@@ -11,6 +11,7 @@ $config = [
     "max_threads" => 100,
     "max_replies" => 200,
 ];
+
 // Ensure directories exist
 foreach (["data_dir", "reports_dir"] as $d) {
     if (!file_exists($config[$d])) {
@@ -82,11 +83,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         array_filter(
                             scandir($config["data_dir"]),
                             fn($f) => str_ends_with($f, ".json") &&
-                                json_decode(
+                                (json_decode(
                                     file_get_contents($config["data_dir"] . $f),
                                     true,
                                 )["thread_id"] ??
-                                0 === $thread_id,
+                                    0) ===
+                                    $thread_id,
                         ),
                     ) - 1;
                 if ($replies >= $config["max_replies"]) {
@@ -160,6 +162,18 @@ $total_posts =
     array_sum(array_map(fn($t) => count($t["replies"]), $threads));
 file_put_contents("postcount.txt", $total_posts);
 file_put_contents("lastupdated.txt", date("Y-m-d H:i:s"));
+
+// Format post message with greentext
+function formatMessage(string $msg): string
+{
+    $lines = explode("\n", htmlspecialchars($msg));
+    foreach ($lines as &$line) {
+        if (str_starts_with($line, "&gt;")) {
+            $line = '<span class="greentext">' . $line . "</span>";
+        }
+    }
+    return implode("<br>", $lines);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -167,171 +181,183 @@ file_put_contents("lastupdated.txt", date("Y-m-d H:i:s"));
   <meta charset="UTF-8">
   <title><?= htmlspecialchars($config["board_title"]) ?> – uniIB</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link rel="stylesheet" href="https://unpkg.com/98.css" />
-  <link rel="stylesheet" href="../styles/board.css" />
+  <link rel="stylesheet" href="https://unpkg.com/chota">
+  <link rel="stylesheet" href="../styles/board.css">
+  <script defer src="../js/userstyles.js"></script>
 </head>
-<body class="windowed">
-  <div class="title-bar">
-    <div class="title-bar-text"><?= htmlspecialchars(
-        $config["board_title"],
-    ) ?></div>
-    <div class="title-bar-controls">
-      <button aria-label="Minimize"></button>
-      <button aria-label="Maximize"></button>
-      <button aria-label="Close"></button>
-    </div>
-  </div>
-
-  <div class="window" style="margin:1em; padding:1em;">
-    <div class="toolbar" style="display:flex; justify-content:space-between;">
-      <div>
-        <a href="../" class="toolbar-button">Home</a> &gt;
-        <a href="./" class="toolbar-button"><?= htmlspecialchars(
-            $config["board_title"],
-        ) ?></a>
+<body>
+  <header>
+    <div class="row">
+      <div class="col-6">
+        <a href="../">Home</a> &gt;
+        <a href="./"><?= htmlspecialchars($config["board_title"]) ?></a>
       </div>
-      <div>
-        <a href="../mod.php" class="toolbar-button">Mod Panel</a>
+      <div class="col-6 text-right">
+        <a href="../mod.php">Mod Panel</a>
       </div>
     </div>
+  </header>
 
-    <fieldset class="field-set">
-      <legend>Board Info</legend>
-      <h1 style="margin:0;"><?= htmlspecialchars($config["board_title"]) ?></h1>
-      <p style="margin:0;"><?= htmlspecialchars($config["description"]) ?></p>
-      <p style="margin:0;">Total Posts: <?= $total_posts ?> (<?= count(
-     $threads,
- ) ?> threads)</p>
-    </fieldset>
+  <div class="container">
+    <div class="board-main-container">
+      <!-- Board Info Card -->
+      <div class="board-info-card">
+        <h2>Board Info</h2>
+        <h1><?= htmlspecialchars($config["board_title"]) ?></h1>
+        <p><?= htmlspecialchars($config["description"]) ?></p>
+        <p>Total Posts: <?= $total_posts ?> (<?= count($threads) ?> threads)</p>
+      </div>
 
-    <fieldset class="field-set">
-      <legend>Create New Thread</legend>
-      <form action="" method="post" enctype="multipart/form-data">
-        <table>
-          <tr><td>Name:</td><td><input type="text" name="name" maxlength="50" placeholder="Anonymous"></td></tr>
-          <tr><td>Subject:</td><td><input type="text" name="subject" maxlength="100"></td></tr>
-          <tr><td>Message:</td><td><textarea name="message" required></textarea></td></tr>
-          <tr><td>File:</td><td><input type="file" name="file"></td></tr>
-          <tr><td></td><td><button class="default" type="submit">Create Thread</button></td></tr>
-        </table>
-        <?php if (
-            !empty($error) &&
-            empty($_POST["thread_id"])
-        ): ?><p class="error"><?= htmlspecialchars($error) ?></p><?php endif; ?>
-      </form>
-    </fieldset>
-
-    <?php foreach ($threads as $thread): ?>
-      <fieldset class="field-set">
-        <legend>Thread No. <?= $thread["id"] ?></legend>
-        <div class="window-body">
-          <div class="post-header">
-            <span class="post-subject"><?= htmlspecialchars(
-                $thread["subject"] ?: "",
-            ) ?></span>
-            <span class="post-name"><?= htmlspecialchars(
-                $thread["name"] ?: "Anonymous",
-            ) ?></span>
-            <span class="post-date"><?= date(
-                "Y/m/d H:i:s",
-                $thread["timestamp"],
-            ) ?></span>
-            <span class="post-id">No. <?= $thread["id"] ?></span>
+      <!-- Create New Thread Card -->
+      <div class="create-thread-card">
+        <h2>Create New Thread</h2>
+        <form action="" method="post" enctype="multipart/form-data">
+          <div class="row">
+            <div class="col-3"><label>Name:</label></div>
+            <div class="col-9"><input type="text" name="name" maxlength="50" placeholder="Anonymous"></div>
           </div>
-          <?php if ($thread["file"]): ?>
-            <div class="post-file">
-              <a href="<?= htmlspecialchars(
-                  $config["data_dir"] . $thread["file"],
-              ) ?>" target="_blank">
-                <img src="<?= htmlspecialchars(
-                    $config["data_dir"] . $thread["file"],
-                ) ?>" class="thumbnail" alt="Attachment">
-              </a>
-            </div>
-          <?php endif; ?>
-          <div class="post-message"><?= nl2br(
-              htmlspecialchars($thread["message"]),
-          ) ?></div>
-          <div class="post-actions">
-            <?php if ($show_reply_form === $thread["id"]): ?>
-              <a href="<?= strtok(
-                  $_SERVER["REQUEST_URI"],
-                  "?",
-              ) ?>" class="default">Cancel Reply</a>
-            <?php else: ?>
-              <a href="?reply_to=<?= $thread["id"] ?>" class="default">Reply</a>
-            <?php endif; ?>
-            <form method="post" action="report.php" style="display:inline;">
-              <input type="hidden" name="post_id" value="<?= $thread["id"] ?>">
-              <button class="report-btn" type="submit">Report</button>
-            </form>
-            <span class="reply-count">Replies: <?= count(
-                $thread["replies"] ?? [],
-            ) ?></span>
+          <div class="row">
+            <div class="col-3"><label>Subject:</label></div>
+            <div class="col-9"><input type="text" name="subject" maxlength="100"></div>
           </div>
-          <?php if ($show_reply_form === $thread["id"]): ?>
-            <div class="reply-form">
-              <form action="" method="post">
-                <input type="hidden" name="thread_id" value="<?= $thread[
-                    "id"
-                ] ?>">
-                <table>
-                  <tr><td>Name:</td><td><input type="text" name="name" maxlength="50" placeholder="Anonymous"></td></tr>
-                  <tr><td>Message:</td><td><textarea name="message" required></textarea></td></tr>
-                  <tr><td></td><td><button class="default" type="submit">Post Reply</button><a href="<?= strtok(
-                      $_SERVER["REQUEST_URI"],
-                      "?",
-                  ) ?>" class="default" style="margin-left:8px;">Cancel</a></td></tr>
-                </table>
-                <?php if (
-                    !empty($error) &&
-                    ($_POST["thread_id"] ?? "") == $thread["id"]
-                ): ?><p class="error"><?= htmlspecialchars(
+          <div class="row">
+            <div class="col-3"><label>Message:</label></div>
+            <div class="col-9"><textarea name="message" required></textarea></div>
+          </div>
+          <div class="row">
+            <div class="col-3"><label>File:</label></div>
+            <div class="col-9"><input type="file" name="file"></div>
+          </div>
+          <div class="row">
+            <div class="col-3"></div>
+            <div class="col-9"><button class="button primary" type="submit">Create Thread</button></div>
+          </div>
+          <?php if (
+              !empty($error) &&
+              empty($_POST["thread_id"])
+          ): ?><p class="text-error"><?= htmlspecialchars(
     $error,
 ) ?></p><?php endif; ?>
+        </form>
+      </div>
+    </div>
+
+    <?php foreach ($threads as $thread): ?>
+      <div class="card">
+        <header>Thread No. <?= $thread["id"] ?></header>
+        <div class="card-body">
+          <div class="row">
+            <div class="col"><strong>Subject:</strong> <?= htmlspecialchars(
+                $thread["subject"] ?: "",
+            ) ?></div>
+            <div class="col"><strong>Name:</strong> <?= htmlspecialchars(
+                $thread["name"] ?: "Anonymous",
+            ) ?></div>
+            <div class="col"><strong>Date:</strong> <?= date(
+                "Y/m/d H:i:s",
+                $thread["timestamp"],
+            ) ?></div>
+            <div class="col"><strong>ID:</strong> No. <?= $thread["id"] ?></div>
+          </div>
+          <div class="post-content">
+            <?php if ($thread["file"]): ?>
+              <div class="post-file">
+                <a href="<?= htmlspecialchars(
+                    $config["data_dir"] . $thread["file"],
+                ) ?>" target="_blank">
+                  <img src="<?= htmlspecialchars(
+                      $config["data_dir"] . $thread["file"],
+                  ) ?>" class="thumbnail" alt="Attachment">
+                </a>
+              </div>
+            <?php endif; ?>
+            <p><?= formatMessage($thread["message"]) ?></p>
+          </div>
+          <div class="post-actions row">
+            <div class="col">
+              <?php if ($show_reply_form === $thread["id"]): ?>
+                <a href="<?= strtok(
+                    $_SERVER["REQUEST_URI"],
+                    "?",
+                ) ?>" class="button outline">Cancel Reply</a>
+              <?php else: ?>
+                <a href="?reply_to=<?= $thread[
+                    "id"
+                ] ?>" class="button primary">Reply</a>
+              <?php endif; ?>
+              <form method="post" action="report.php" style="display:inline;">
+                <input type="hidden" name="post_id" value="<?= $thread[
+                    "id"
+                ] ?>">
+                <button class="button error" type="submit">Report</button>
               </form>
+              <span>Replies: <?= count($thread["replies"] ?? []) ?></span>
             </div>
+          </div>
+          <?php if ($show_reply_form === $thread["id"]): ?>
+            <form action="" method="post">
+              <input type="hidden" name="thread_id" value="<?= $thread[
+                  "id"
+              ] ?>">
+              <div class="row">
+                <div class="col-3"><label>Name:</label></div>
+                <div class="col-9"><input type="text" name="name" maxlength="50" placeholder="Anonymous"></div>
+              </div>
+              <div class="row">
+                <div class="col-3"><label>Message:</label></div>
+                <div class="col-9"><textarea name="message" required></textarea></div>
+              </div>
+              <div class="row">
+                <div class="col-3"></div>
+                <div class="col-9">
+                  <button class="button primary" type="submit">Post Reply</button>
+                  <a href="<?= strtok(
+                      $_SERVER["REQUEST_URI"],
+                      "?",
+                  ) ?>" class="button outline" style="margin-left:8px;">Cancel</a>
+                </div>
+              </div>
+              <?php if (
+                  !empty($error) &&
+                  ($_POST["thread_id"] ?? "") == $thread["id"]
+              ): ?><p class="text-error"><?= htmlspecialchars(
+    $error,
+) ?></p><?php endif; ?>
+            </form>
           <?php endif; ?>
           <?php foreach (array_slice($thread["replies"], -5) as $reply): ?>
-            <div class="reply">
-              <div class="post-header">
-                <span class="post-name"><?= htmlspecialchars(
+            <div class="card">
+              <header>
+                <strong><?= htmlspecialchars(
                     $reply["name"] ?: "Anonymous",
-                ) ?></span>
-                <span class="post-date"><?= date(
-                    "Y/m/d H:i:s",
-                    $reply["timestamp"],
-                ) ?></span>
-                <span class="post-id">No. <?= htmlspecialchars(
-                    $reply["id"],
-                ) ?></span>
-              </div>
-              <div class="post-message"><?= nl2br(
-                  htmlspecialchars($reply["message"]),
-              ) ?></div>
-              <div class="post-actions">
+                ) ?></strong>
+                <span><?= date("Y/m/d H:i:s", $reply["timestamp"]) ?></span>
+                <span>No. <?= htmlspecialchars($reply["id"]) ?></span>
+              </header>
+              <div class="card-body">
+                <p><?= formatMessage($reply["message"]) ?></p>
                 <form method="post" action="report.php" style="display:inline;">
                   <input type="hidden" name="post_id" value="<?= $reply[
                       "id"
                   ] ?>">
-                  <button class="report-btn" type="submit">Report</button>
+                  <button class="button error" type="submit">Report</button>
                 </form>
               </div>
             </div>
           <?php endforeach; ?>
           <?php if (count($thread["replies"]) > 5): ?>
-            <div class="more-replies"><?= count($thread["replies"]) -
-                5 ?> more replies…</div>
+            <p class="text-secondary"><?= count($thread["replies"]) -
+                5 ?> more replies…</p>
           <?php endif; ?>
         </div>
-      </fieldset>
+      </div>
     <?php endforeach; ?>
-
-    <footer style="margin-top:1em; text-align:center;">
-      <p>uniIB <?= htmlspecialchars(
-          $config["board_title"],
-      ) ?> – Generated <?= date("Y-m-d H:i:s") ?></p>
-    </footer>
   </div>
+
+  <footer class="text-center">
+    <p>uniIB <?= htmlspecialchars(
+        $config["board_title"],
+    ) ?> – Generated <?= date("Y-m-d H:i:s") ?></p>
+  </footer>
 </body>
 </html>
